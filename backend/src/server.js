@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import "./db/connection.js"; // Establish database connection
 import records from "./routes/record.js";
 
 const PORT = process.env.PORT || 5050;

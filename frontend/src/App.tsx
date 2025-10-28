@@ -122,7 +122,7 @@ function App() {
               <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 🗄️ Database Tester
               </h1>
-              <p className="text-sm text-gray-600 mt-1">Test your MongoDB connection</p>
+              <p className="text-sm text-gray-600 mt-1">Test Connection</p>
             </div>
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-500'}`}></div>

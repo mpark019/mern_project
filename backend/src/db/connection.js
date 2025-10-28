@@ -1,23 +1,18 @@
-import { MongoClient, ServerApiVersion } from "mongodb";
-
+import mongoose from "mongoose";
 
 const uri = process.env.ATLAS_URI || "";
-const client = new MongoClient(uri, {
-    serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-    }
-});
 
-try {
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
-    console.log("successfully connected")
-} catch(err) {
-    console.error(err);
+if (!uri) {
+  console.error("Error: ATLAS_URI is not defined in environment variables");
 }
 
-let db = client.db("4331")
+try {
+  await mongoose.connect(uri);
+  console.log("Successfully connected to MongoDB with Mongoose");
+} catch (err) {
+  console.error("MongoDB connection error:", err);
+  process.exit(1);
+}
 
-export default db;
+// Export mongoose for use in routes
+export default mongoose;
