@@ -1,16 +1,42 @@
-import type { FormEvent } from 'react'
-import { Link } from 'react-router-dom'
-import { GL } from '../components/gl'
 import { useState } from 'react'
-
-
-
+import type { FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { GL } from '../components/gl'
 
 export default function Signup() {
-    
-  const onSubmit = (e: FormEvent) => {
+  const navigate = useNavigate()
+  const [formData, setFormData] = useState({ username: '', email: '', password: '' })
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    // TODO: Hook up to backend auth
+    setLoading(true)
+    setMessage('')
+
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json().catch(() => null)
+      
+      if (!response.ok) {
+        const errorMsg = data?.error || data?.message || `Failed to create account (${response.status})`
+        throw new Error(errorMsg)
+      }
+
+      setMessage('Account created successfully!')
+      setTimeout(() => navigate('/login'), 1000)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Error creating account'
+      setMessage(errorMsg)
+      console.error('Signup error:', error)
+    } finally {
+      setLoading(false)
+    }
   }
   
   
@@ -39,12 +65,21 @@ export default function Signup() {
         <section className="py-16 md:py-24">
           <div className="max-w-md mx-auto backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-8">
             <h2 className="text-2xl font-bold mb-6 text-white">Create account</h2>
+            
+            {message && (
+              <div className={`mb-4 p-3 rounded-lg ${message.includes('success') ? 'bg-green-500/20 text-green-200' : 'bg-red-500/20 text-red-200'}`}>
+                {message}
+              </div>
+            )}
+
             <form className="space-y-4" onSubmit={onSubmit}>
               <div>
                 <label className="block text-sm font-medium mb-2 text-white">Username</label>
                 <input
                   type="text"
                   required
+                  value={formData.username}
+                  onChange={(e) => setFormData({...formData, username: e.target.value})}
                   placeholder="User"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white"
                 />
@@ -54,6 +89,8 @@ export default function Signup() {
                 <input
                   type="email"
                   required
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
                   placeholder="john.smith@email.com"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white"
                 />
@@ -63,15 +100,18 @@ export default function Signup() {
                 <input
                   type="password"
                   required
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
                   placeholder="••••••••"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all"
+                disabled={loading}
+                className="w-full bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all disabled:opacity-50"
               >
-                Create Account
+                {loading ? 'Creating...' : 'Create Account'}
               </button>
             </form>
             <p className="mt-4 text-sm text-gray-600 text-center">
