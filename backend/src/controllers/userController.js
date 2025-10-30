@@ -1,4 +1,34 @@
-import User from "../models/User.js";
+import User from "../models/userModel.js";
+import jwt from "jsonwebtoken"
+import bcrypt from "bcryptjs";
+import asyncHandler from "express-async-handler"
+
+// create a new user
+export const createUser = asyncHandler(async (req, res) => {
+
+  try {
+    const newUser = new User({
+      username: req.body.username,
+      email: req.body.email,
+      password: req.body.password,
+    });
+    
+    const savedUser = await newUser.save();
+    res.status(201).send(savedUser);
+  } catch (err) {
+    console.error(err);
+    
+    // Handle validation errors
+    if (err.name === 'ValidationError') {
+      res.status(400).send({ error: err.message });
+    } else if (err.code === 11000) {
+      // Duplicate key error
+      res.status(400).send({ error: "Username or email already exists" });
+    } else {
+      res.status(500).send("Error creating user");
+    }
+  }
+});
 
 // fetch all users
 export const getUsers = async (req, res) => {
@@ -24,32 +54,6 @@ export const getUserById = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Error fetching user");
-  }
-};
-
-// create a new user
-export const createUser = async (req, res) => {
-  try {
-    const newUser = new User({
-      username: req.body.username,
-      email: req.body.email,
-      password: req.body.password,
-    });
-    
-    const savedUser = await newUser.save();
-    res.status(201).send(savedUser);
-  } catch (err) {
-    console.error(err);
-    
-    // Handle validation errors
-    if (err.name === 'ValidationError') {
-      res.status(400).send({ error: err.message });
-    } else if (err.code === 11000) {
-      // Duplicate key error
-      res.status(400).send({ error: "Username or email already exists" });
-    } else {
-      res.status(500).send("Error creating user");
-    }
   }
 };
 

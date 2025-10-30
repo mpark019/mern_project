@@ -16,7 +16,7 @@ router.get("/", getUsers);
 router.get("/:id", getUserById);
 
 // Create new user
-router.post("/", createUser);
+router.post("/createUser", createUser);
 
 // Update a user by id
 router.patch("/:id", updateUser);
