@@ -1,7 +1,7 @@
 
 import { useState } from 'react'
 
-const API_URL = 'http://localhost:5050/record'
+const API_URL = 'http://localhost:5050/users'
 
 interface User {
   _id: string
@@ -23,6 +23,11 @@ function App() {
     setLoading(true)
     try {
       const response = await fetch(API_URL)
+      if (!response.ok) {
+        const errorText = await response.text()
+        setMessage('Error fetching users: ' + errorText)
+        return
+      }
       const data = await response.json()
       setUsers(data)
       setMessage('Users fetched successfully!')
@@ -47,7 +52,15 @@ function App() {
         setFormData({ username: '', email: '', password: '' })
         fetchUsers() // Refresh the list
       } else {
-        setMessage('Error creating user')
+        let errorMessage = 'Unknown error'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch {
+          const errorText = await response.text()
+          errorMessage = errorText || errorMessage
+        }
+        setMessage('Error creating user: ' + errorMessage)
       }
     } catch (error) {
       setMessage('Error: ' + (error instanceof Error ? error.message : 'Unknown error'))
@@ -66,9 +79,19 @@ function App() {
       if (response.ok) {
         setMessage('User deleted successfully!')
         fetchUsers() // Refresh the list
+      } else {
+        let errorMessage = 'Unknown error'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch {
+          const errorText = await response.text()
+          errorMessage = errorText || errorMessage
+        }
+        setMessage('Error deleting user: ' + errorMessage)
       }
     } catch (error) {
-      setMessage('Error deleting user')
+      setMessage('Error deleting user: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setLoading(false)
     }
@@ -91,7 +114,15 @@ function App() {
         setEditFormData({ username: '', email: '', password: '' })
         fetchUsers() // Refresh the list
       } else {
-        setMessage('Error updating user')
+        let errorMessage = 'Unknown error'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch {
+          const errorText = await response.text()
+          errorMessage = errorText || errorMessage
+        }
+        setMessage('Error updating user: ' + errorMessage)
       }
     } catch (error) {
       setMessage('Error: ' + (error instanceof Error ? error.message : 'Unknown error'))

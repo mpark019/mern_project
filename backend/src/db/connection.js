@@ -7,8 +7,10 @@ if (!uri) {
 }
 
 try {
-  await mongoose.connect(uri);
-  console.log("Successfully connected to MongoDB with Mongoose");
+  await mongoose.connect(uri, {
+    dbName: process.env.DB_NAME || "4331"
+  });
+  console.log(`Successfully connected to MongoDB with Mongoose (database: ${process.env.DB_NAME || "4331"})`);
 } catch (err) {
   console.error("MongoDB connection error:", err);
   process.exit(1);

@@ -5,7 +5,6 @@ import asyncHandler from "express-async-handler"
 
 // create a new user
 export const createUser = asyncHandler(async (req, res) => {
-
   try {
     const newUser = new User({
       username: req.body.username,
@@ -14,18 +13,18 @@ export const createUser = asyncHandler(async (req, res) => {
     });
     
     const savedUser = await newUser.save();
-    res.status(201).send(savedUser);
+    res.status(201).json(savedUser);
   } catch (err) {
     console.error(err);
     
     // Handle validation errors
     if (err.name === 'ValidationError') {
-      res.status(400).send({ error: err.message });
+      res.status(400).json({ error: err.message });
     } else if (err.code === 11000) {
       // Duplicate key error
-      res.status(400).send({ error: "Username or email already exists" });
+      res.status(400).json({ error: "Username or email already exists" });
     } else {
-      res.status(500).send("Error creating user");
+      res.status(500).json({ error: "Error creating user" });
     }
   }
 });
@@ -34,10 +33,10 @@ export const createUser = asyncHandler(async (req, res) => {
 export const getUsers = async (req, res) => {
   try {
     const users = await User.find({});
-    res.status(200).send(users);
+    res.status(200).json(users);
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error fetching users");
+    res.status(500).json({ error: "Error fetching users" });
   }
 };
 
@@ -47,13 +46,13 @@ export const getUserById = async (req, res) => {
     const user = await User.findById(req.params.id);
     
     if (!user) {
-      res.status(404).send("User not found");
+      res.status(404).json({ error: "User not found" });
     } else {
-      res.status(200).send(user);
+      res.status(200).json(user);
     }
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error fetching user");
+    res.status(500).json({ error: "Error fetching user" });
   }
 };
 
@@ -71,19 +70,19 @@ export const updateUser = async (req, res) => {
     );
     
     if (!updatedUser) {
-      res.status(404).send("User not found");
+      res.status(404).json({ error: "User not found" });
     } else {
-      res.status(200).send(updatedUser);
+      res.status(200).json(updatedUser);
     }
   } catch (err) {
     console.error(err);
     
     if (err.name === 'ValidationError') {
-      res.status(400).send({ error: err.message });
+      res.status(400).json({ error: err.message });
     } else if (err.code === 11000) {
-      res.status(400).send({ error: "Username or email already exists" });
+      res.status(400).json({ error: "Username or email already exists" });
     } else {
-      res.status(500).send("Error updating user");
+      res.status(500).json({ error: "Error updating user" });
     }
   }
 };
@@ -94,13 +93,13 @@ export const deleteUser = async (req, res) => {
     const deletedUser = await User.findByIdAndDelete(req.params.id);
     
     if (!deletedUser) {
-      res.status(404).send("User not found");
+      res.status(404).json({ error: "User not found" });
     } else {
-      res.status(200).send({ message: "User deleted successfully" });
+      res.status(200).json({ message: "User deleted successfully" });
     }
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error deleting user");
+    res.status(500).json({ error: "Error deleting user" });
   }
 };
 
