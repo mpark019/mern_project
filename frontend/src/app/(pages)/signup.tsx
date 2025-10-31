@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { GL } from '../components/gl'
+import { GL } from '../../components/gl'
 
 export default function Signup() {
   const navigate = useNavigate()
@@ -28,8 +28,18 @@ export default function Signup() {
         throw new Error(errorMsg)
       }
 
+      // Store token in localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('user', JSON.stringify({
+          _id: data._id,
+          username: data.username,
+          email: data.email
+        }))
+      }
+
       setMessage('Account created successfully!')
-      setTimeout(() => navigate('/login'), 1000)
+      setTimeout(() => navigate('/app'), 1000)
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Error creating account'
       setMessage(errorMsg)
@@ -51,9 +61,9 @@ export default function Signup() {
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 grid place-items-center shadow-md">
-              <span className="text-white text-lg font-bold">MP</span>
+              <span className="text-white text-lg font-bold">P</span>
             </div>
-            <h1 className="text-xl font-semibold text-white">MERN Starter</h1>
+            <h1 className="text-xl font-semibold text-white">Project</h1>
           </Link>
           <nav className="flex items-center gap-4 text-sm">
             <Link className="text-white hover:text-gray-400" to="/login">Sign in</Link>

@@ -1,28 +1,69 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-import { useState } from 'react'
-
-const API_URL = 'http://localhost:5050/users'
+const API_URL = '/api/users'
 
 interface User {
   _id: string
   username: string
   email: string
-  password: string
+  password?: string
+}
+
+interface CurrentUser {
+  _id: string
+  username: string
+  email: string
+}
+
+// Function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token')
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  return headers
 }
 
 function App() {
+  const navigate = useNavigate()
   const [users, setUsers] = useState<User[]>([])
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [formData, setFormData] = useState({ username: '', email: '', password: '' })
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [editFormData, setEditFormData] = useState({ username: '', email: '', password: '' })
 
+  // Load current user
+  useEffect(() => {
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      try {
+        setCurrentUser(JSON.parse(userStr))
+      } catch (e) {
+        console.error('Failed to parse user from localStorage', e)
+      }
+    }
+  }, [])
+
+  // Logout function
+  const logout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setCurrentUser(null)
+    setMessage('Logged out successfully')
+    setTimeout(() => navigate('/'), 1000)
+  }
+
   // Fetch all users
   const fetchUsers = async () => {
     setLoading(true)
     try {
-      const response = await fetch(API_URL)
+      const response = await fetch(API_URL, {
+        headers: getAuthHeaders(),
+      })
       if (!response.ok) {
         const errorText = await response.text()
         setMessage('Error fetching users: ' + errorText)
@@ -75,6 +116,7 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       })
       if (response.ok) {
         setMessage('User deleted successfully!')
@@ -105,7 +147,7 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/${editingUser._id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(editFormData),
       })
       if (response.ok) {
@@ -134,7 +176,7 @@ function App() {
   // Start editing a user
   const startEditing = (user: User) => {
     setEditingUser(user)
-    setEditFormData({ username: user.username, email: user.email, password: user.password })
+    setEditFormData({ username: user.username, email: user.email, password: user.password || '' })
   }
 
   // Cancel editing
@@ -151,9 +193,9 @@ function App() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                🗄️ Database Tester
+                Crud Test
               </h1>
-              <p className="text-sm text-gray-600 mt-1">Test Connection</p>
+              <p className="text-sm text-gray-600 mt-1"></p>
             </div>
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-500'}`}></div>
@@ -165,6 +207,16 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
+            {currentUser && (
+              <button
+                onClick={logout}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-semibold transition-colors"
+              >
+                Logout
+              </button>
+            )}
+          
+
         {/* Action Section */}
         <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -360,7 +412,9 @@ function App() {
                       <div className="flex-1">
                         <h4 className="font-bold text-gray-800 mb-1">{user.username}</h4>
                         <p className="text-sm text-gray-600">{user.email}</p>
-                        <p className="text-xs text-indigo-600 font-medium">Password: {user.password}</p>
+                        {user.password && (
+                          <p className="text-xs text-indigo-600 font-medium">Password: {user.password}</p>
+                        )}
                       </div>
                       <div className="flex gap-2">
                         <button

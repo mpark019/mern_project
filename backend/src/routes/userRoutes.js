@@ -5,23 +5,22 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  loginUser,
+  getCurrentUser,
 } from "../controllers/userController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Get list of all users
-router.get("/", getUsers);
+// Public routes
+router.post("/", createUser); // Register new user
+router.post("/login", loginUser); // Login user
 
-// Get single user by id
-router.get("/:id", getUserById);
-
-// Create new user
-router.post("/", createUser);
-
-// Update a user by id
-router.patch("/:id", updateUser);
-
-// Delete a user
-router.delete("/:id", deleteUser);
+// Protected routes (require authentication)
+router.get("/me", protect, getCurrentUser);
+router.get("/", protect, getUsers);
+router.get("/:id", protect, getUserById);
+router.patch("/:id", protect, updateUser);
+router.delete("/:id", protect, deleteUser);
 
 export default router;
