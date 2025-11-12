@@ -2,6 +2,7 @@ import User from "../models/userModel.js";
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs";
 import asyncHandler from "express-async-handler"
+import { sendEmail } from "../utils/sendEmail.js";
 
 // Helper function to generate JWT token
 const generateToken = (userId) => {
@@ -10,41 +11,58 @@ const generateToken = (userId) => {
   });
 };
 
-// create a new user
+// create a new user with email verification
 export const createUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
 
-  // Validate input
   if (!username || !email || !password) {
-    const error = new Error("Please provide username, email, and password");
-    error.statusCode = 400;
-    throw error;
+    res.status(400);
+    throw new Error("Please provide username, email, and password");
   }
 
-  // Hash password
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    res.status(400);
+    throw new Error("User with this email already exists");
+  }
+
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  // Create user
   const newUser = new User({
     username,
     email,
     password: hashedPassword,
+    verified: false,
   });
 
   const savedUser = await newUser.save();
 
-  // Generate JWT token
-  const token = generateToken(savedUser._id);
+  // Generate verification token
+  const verificationToken = jwt.sign(
+    { id: savedUser._id },
+    process.env.JWT_SECRET,
+    { expiresIn: "24h" }
+  );
 
-  // Return user data and token
+  // Send backend URL for local testing
+  const clientUrl = process.env.CLIENT_URL.replace(/\/$/, ''); // Remove trailing slash
+  const verifyUrl = `${clientUrl}/verify/${verificationToken}`;
+
+  const html = `
+    <h3>Welcome, ${username}!</h3>
+    <p>Click below to verify your email:</p>
+    <a href="${verifyUrl}" target="_blank">Verify Email</a>
+    <p>This link expires in 24 hours.</p>
+  `;
+
+  await sendEmail(email, "Verify your email", html);
+
   res.status(201).json({
-    _id: savedUser._id,
-    username: savedUser.username,
-    email: savedUser.email,
-    token,
+    message: "User registered successfully. Please check your email to verify your account.",
   });
 });
+
 
 // fetch all users
 export const getUsers = asyncHandler(async (req, res) => {
@@ -123,6 +141,8 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw error;
   }
 
+  
+
   // Find user by email
   const user = await User.findOne({ email });
 
@@ -130,6 +150,11 @@ export const loginUser = asyncHandler(async (req, res) => {
     const error = new Error("Invalid email or password");
     error.statusCode = 401;
     throw error;
+  }
+
+ // Check if the account is verified
+  if (!user.verified) {
+    return res.status(403).json({ message: "Please verify your email first" });
   }
 
   // Check if password matches

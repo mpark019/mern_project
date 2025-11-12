@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const API_URL = '/api/users'
+
+const API_URL = 'http://localhost:5050/users' // Full URL to backend
 
 interface User {
   _id: string

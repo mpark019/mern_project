@@ -20,7 +20,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "Password is required"],
     minlength: [6, "Password must be at least 6 characters long"]
-  }
+  },
+  verified: { type: Boolean, default: false },
 }, {
   timestamps: true // Automatically adds createdAt and updatedAt fields
 });
