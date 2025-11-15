@@ -71,8 +71,23 @@ class _LoginScreenState extends State<LoginScreen> {
             ElevatedButton(
               onPressed: loading ? null : loginUser,
               child: loading
-                  ? const CircularProgressIndicator()
-                  : const Text("Login"),
+                ? const CircularProgressIndicator()
+                : const Text("Login"),
+            ),
+
+              const SizedBox(height: 10),
+
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, "/register");
+              },
+              child: const Text(
+                "Don’t have an account? Register",
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ],
         ),
