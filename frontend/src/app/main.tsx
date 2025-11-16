@@ -6,6 +6,7 @@ import App from './App.tsx'
 import Landing from './(pages)/Landing.tsx'
 import Login from './(pages)/login.tsx'
 import Signup from './(pages)/signup.tsx'
+import VerifyEmail from "./(pages)/VerifyEmail";
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -15,6 +16,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/app" element={<App />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/verify/:token" element={<VerifyEmail />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
