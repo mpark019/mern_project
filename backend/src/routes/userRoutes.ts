@@ -1,6 +1,6 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import User from "../models/userModel.js";
+import User from "../models/userModel";
 import {
   getUsers,
   getUserById,
@@ -9,34 +9,40 @@ import {
   deleteUser,
   loginUser,
   getCurrentUser,
-} from "../controllers/userController.js";
-import { protect } from "../middleware/authMiddleware.js";
+} from "../controllers/userController";
+import { protect } from "../middleware/authMiddleware";
 
 const router = express.Router();
+
+interface JwtPayload {
+  id: string;
+}
 
 // Public routes - MUST be before protected routes
 router.post("/", createUser); // Register new user
 router.post("/login", loginUser); // Login user
 
 // VERIFY EMAIL - Public route
-router.get("/verify/:token", async (req, res) => {
+router.get("/verify/:token", async (req: Request, res: Response): Promise<void> => {
   console.log("Verify route hit");
   console.log("Token received:", req.params.token);
 
   try {
-    const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET as string) as JwtPayload;
     
     console.log("Decoded token:", decoded);
 
     const user = await User.findById(decoded.id);
     if (!user) {
       console.log("No user found for decoded ID");
-      return res.status(400).json({ message: "Invalid verification link" });
+      res.status(400).json({ message: "Invalid verification link" });
+      return;
     }
 
     if (user.verified) {
       console.log("User already verified:", user.email);
-      return res.status(200).json({ message: "Email already verified" });
+      res.status(200).json({ message: "Email already verified" });
+      return;
     }
 
     user.verified = true;
@@ -58,3 +64,4 @@ router.patch("/:id", protect, updateUser);
 router.delete("/:id", protect, deleteUser);
 
 export default router;
+

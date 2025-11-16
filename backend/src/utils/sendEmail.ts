@@ -1,6 +1,6 @@
-import nodemailer from "nodemailer";
+import nodemailer, { Transporter, SendMailOptions } from "nodemailer";
 
-export const sendEmail = async (to, subject, html) => {
+export const sendEmail = async (to: string, subject: string, html: string): Promise<any> => {
   // Validate environment variables
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.error("Email configuration error: EMAIL_USER or EMAIL_PASS is not set");
@@ -8,7 +8,7 @@ export const sendEmail = async (to, subject, html) => {
   }
 
   try {
-    const transporter = nodemailer.createTransport({
+    const transporter: Transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
@@ -19,7 +19,7 @@ export const sendEmail = async (to, subject, html) => {
     // Verify transporter configuration
     await transporter.verify();
 
-    const mailOptions = {
+    const mailOptions: SendMailOptions = {
       from: process.env.EMAIL_USER,
       to,
       subject,
@@ -29,7 +29,7 @@ export const sendEmail = async (to, subject, html) => {
     const info = await transporter.sendMail(mailOptions);
     console.log("Email sent successfully:", info.messageId);
     return info;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Email sending error:", error);
     
     // Provide more specific error messages
@@ -44,3 +44,4 @@ export const sendEmail = async (to, subject, html) => {
     throw new Error(`Email could not be sent: ${error.message}`);
   }
 };
+

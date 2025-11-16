@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const uri = process.env.ATLAS_URI || "";
+const uri: string = process.env.ATLAS_URI || "";
 
 if (!uri) {
   console.error("Error: ATLAS_URI is not defined in environment variables");
@@ -18,3 +18,4 @@ try {
 
 // Export mongoose for use in routes
 export default mongoose;
+

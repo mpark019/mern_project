@@ -1,12 +1,12 @@
 import "dotenv/config";
-import express from "express";
+import express, { Express } from "express";
 import cors from "cors";
-import "./db/connection.js"; // Establish database connection
-import userRoutes from "./routes/userRoutes.js";
-import { errorHandler } from "./middleware/errorHandler.js";
+import "./db/connection"; // Establish database connection
+import userRoutes from "./routes/userRoutes";
+import { errorHandler } from "./middleware/errorHandler";
 
-const PORT = process.env.PORT || 5050;
-const app = express();
+const PORT: number = parseInt(process.env.PORT || "5050", 10);
+const app: Express = express();
 
 app.use(cors());
 app.use(express.json());
@@ -21,3 +21,4 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+

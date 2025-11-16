@@ -1,7 +1,19 @@
+import { Request, Response, NextFunction } from "express";
+
+interface CustomError extends Error {
+  statusCode?: number;
+  code?: number;
+}
+
 // Custom error handling middleware
-export const errorHandler = (err, req, res, next) => {
-  let statusCode = err.statusCode || 500;
-  let message = err.message || "Internal server error";
+export const errorHandler = (
+  err: CustomError,
+  _req: Request,
+  res: Response,
+  _next: NextFunction
+): void => {
+  let statusCode: number = err.statusCode || 500;
+  let message: string = err.message || "Internal server error";
 
   // Handle Mongoose validation errors
   if (err.name === "ValidationError") {

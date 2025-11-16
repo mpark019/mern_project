@@ -1,18 +1,23 @@
-import User from "../models/userModel.js";
-import jwt from "jsonwebtoken"
+import { Request, Response } from "express";
+import UserModel, { type User } from "../models/userModel";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import asyncHandler from "express-async-handler"
-import { sendEmail } from "../utils/sendEmail.js";
+import asyncHandler from "express-async-handler";
+import { sendEmail } from "../utils/sendEmail";
+
+interface CustomError extends Error {
+  statusCode?: number;
+}
 
 // Helper function to generate JWT token
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
+const generateToken = (userId: string): string => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET as string, {
     expiresIn: "30d", // Token expires in 30 days
   });
 };
 
 // create a new user with email verification
-export const createUser = asyncHandler(async (req, res) => {
+export const createUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { username, email, password } = req.body;
 
   if (!username || !email || !password) {
@@ -20,7 +25,7 @@ export const createUser = asyncHandler(async (req, res) => {
     throw new Error("Please provide username, email, and password");
   }
 
-  const existingUser = await User.findOne({ email });
+  const existingUser = await UserModel.findOne({ email });
   if (existingUser) {
     res.status(400);
     throw new Error("User with this email already exists");
@@ -29,7 +34,7 @@ export const createUser = asyncHandler(async (req, res) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  const newUser = new User({
+  const newUser = new UserModel({
     username,
     email,
     password: hashedPassword,
@@ -45,7 +50,7 @@ export const createUser = asyncHandler(async (req, res) => {
   // Generate verification token before saving user
   const verificationToken = jwt.sign(
     { id: newUser._id },
-    process.env.JWT_SECRET,
+    process.env.JWT_SECRET as string,
     { expiresIn: "24h" }
   );
 
@@ -65,33 +70,32 @@ export const createUser = asyncHandler(async (req, res) => {
   // Try to send email first, only save user if email is sent successfully
   try {
     await sendEmail(email, "Verify your email", html);
-  } catch (emailError) {
+  } catch (emailError: any) {
     // If email fails, don't create the user
     res.status(500);
     throw new Error(`Failed to send verification email: ${emailError.message}`);
   }
 
   // Only save user if email was sent successfully
-  const savedUser = await newUser.save();
+  await newUser.save();
 
   res.status(201).json({
     message: "User registered successfully. Please check your email to verify your account.",
   });
 });
 
-
 // fetch all users
-export const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find({}).select("-password"); // Exclude password from response
+export const getUsers = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+  const users = await UserModel.find({}).select("-password"); // Exclude password from response
   res.status(200).json(users);
 });
 
 // fetch a single user 
-export const getUserById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id).select("-password"); // Exclude password from response
+export const getUserById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const user = await UserModel.findById(req.params.id).select("-password"); // Exclude password from response
   
   if (!user) {
-    const error = new Error("User not found");
+    const error = new Error("User not found") as CustomError;
     error.statusCode = 404;
     throw error;
   }
@@ -100,8 +104,8 @@ export const getUserById = asyncHandler(async (req, res) => {
 });
 
 // update user
-export const updateUser = asyncHandler(async (req, res) => {
-  const updateData = { ...req.body };
+export const updateUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const updateData: Partial<User> = { ...req.body };
 
   // If password is being updated, hash it first
   if (updateData.password) {
@@ -109,14 +113,14 @@ export const updateUser = asyncHandler(async (req, res) => {
     updateData.password = await bcrypt.hash(updateData.password, salt);
   }
 
-  const updatedUser = await User.findByIdAndUpdate(
+  const updatedUser = await UserModel.findByIdAndUpdate(
     req.params.id,
     updateData,
     { new: true, runValidators: true } // Return updated doc and run validators
   );
   
   if (!updatedUser) {
-    const error = new Error("User not found");
+    const error = new Error("User not found") as CustomError;
     error.statusCode = 404;
     throw error;
   }
@@ -134,11 +138,11 @@ export const updateUser = asyncHandler(async (req, res) => {
 });
 
 // delete user
-export const deleteUser = asyncHandler(async (req, res) => {
-  const deletedUser = await User.findByIdAndDelete(req.params.id);
+export const deleteUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const deletedUser = await UserModel.findByIdAndDelete(req.params.id);
   
   if (!deletedUser) {
-    const error = new Error("User not found");
+    const error = new Error("User not found") as CustomError;
     error.statusCode = 404;
     throw error;
   }
@@ -147,43 +151,42 @@ export const deleteUser = asyncHandler(async (req, res) => {
 });
 
 // login user
-export const loginUser = asyncHandler(async (req, res) => {
+export const loginUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
 
   // Validate input
   if (!email || !password) {
-    const error = new Error("Please provide email and password");
+    const error = new Error("Please provide email and password") as CustomError;
     error.statusCode = 400;
     throw error;
   }
 
-  
-
   // Find user by email
-  const user = await User.findOne({ email });
+  const user = await UserModel.findOne({ email });
 
   if (!user) {
-    const error = new Error("Invalid email or password");
+    const error = new Error("Invalid email or password") as CustomError;
     error.statusCode = 401;
     throw error;
   }
 
- // Check if the account is verified
+  // Check if the account is verified
   if (!user.verified) {
-    return res.status(403).json({ message: "Please verify your email first" });
+    res.status(403).json({ message: "Please verify your email first" });
+    return;
   }
 
   // Check if password matches
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {
-    const error = new Error("Invalid email or password");
+    const error = new Error("Invalid email or password") as CustomError;
     error.statusCode = 401;
     throw error;
   }
 
   // Generate JWT token
-  const token = generateToken(user._id);
+  const token = generateToken(String(user._id));
 
   // Return user data and token
   res.status(200).json({
@@ -195,12 +198,18 @@ export const loginUser = asyncHandler(async (req, res) => {
 });
 
 // get current user profile (protected route)
-export const getCurrentUser = asyncHandler(async (req, res) => {
+export const getCurrentUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   // req.user is set by the auth middleware
-  const user = await User.findById(req.user.userId).select("-password");
+  if (!req.user) {
+    const error = new Error("User not authenticated") as CustomError;
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const user = await UserModel.findById(req.user.userId).select("-password");
 
   if (!user) {
-    const error = new Error("User not found");
+    const error = new Error("User not found") as CustomError;
     error.statusCode = 404;
     throw error;
   }
