@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import UserModel, { type User } from "../models/userModel";
+import CalorieLogModel from "../models/calorieModel";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import asyncHandler from "express-async-handler";
@@ -9,7 +10,7 @@ interface CustomError extends Error {
   statusCode?: number;
 }
 
-// Helper function to generate JWT token
+// Generate JWT Token
 const generateToken = (userId: string): string => {
   return jwt.sign({ userId }, process.env.JWT_SECRET as string, {
     expiresIn: "30d", // Token expires in 30 days
@@ -55,7 +56,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response): Prom
   );
 
   // Prepare email content
-  const clientUrl = process.env.CLIENT_URL.replace(/\/$/, ''); // Remove trailing slash
+  const clientUrl = process.env.CLIENT_URL.replace(/\/$/, '');
   const verifyUrl = `${clientUrl}/verify/${verificationToken}`;
 
   const html = `
@@ -92,7 +93,7 @@ export const getUsers = asyncHandler(async (_req: Request, res: Response): Promi
 
 // fetch a single user 
 export const getUserById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-  const user = await UserModel.findById(req.params.id).select("-password"); // Exclude password from response
+  const user = await UserModel.findById(req.params.id).select("-password");
   
   if (!user) {
     const error = new Error("User not found") as CustomError;
@@ -215,5 +216,26 @@ export const getCurrentUser = asyncHandler(async (req: Request, res: Response): 
   }
 
   res.status(200).json(user);
+});
+
+// get user by username with meals
+export const getUserByUsername = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { username } = req.params;
+  
+  const user = await UserModel.findOne({ username }).select("-password");
+  
+  if (!user) {
+    const error = new Error("User not found") as CustomError;
+    error.statusCode = 404;
+    throw error;
+  }
+  
+  // Fetch calorie logs from separate collection
+  const meals = await CalorieLogModel.find({ userId: user._id }).sort({ createdAt: -1 });
+  
+  res.status(200).json({
+    username: user.username,
+    meals,
+  });
 });
 

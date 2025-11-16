@@ -9,6 +9,7 @@ import {
   deleteUser,
   loginUser,
   getCurrentUser,
+  getUserByUsername,
 } from "../controllers/userController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -18,7 +19,7 @@ interface JwtPayload {
   id: string;
 }
 
-// Public routes - MUST be before protected routes
+// Public routes 
 router.post("/", createUser); // Register new user
 router.post("/login", loginUser); // Login user
 
@@ -55,6 +56,9 @@ router.get("/verify/:token", async (req: Request, res: Response): Promise<void> 
     res.status(400).json({ message: "Invalid or expired token" });
   }
 });
+
+// Public route to get user by username
+router.get("/get-user/:username", getUserByUsername);
 
 // Protected routes (require authentication)
 router.get("/me", protect, getCurrentUser);
