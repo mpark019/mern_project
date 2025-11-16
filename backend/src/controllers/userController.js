@@ -36,16 +36,20 @@ export const createUser = asyncHandler(async (req, res) => {
     verified: false,
   });
 
-  const savedUser = await newUser.save();
+  // Validate CLIENT_URL before proceeding
+  if (!process.env.CLIENT_URL) {
+    res.status(500);
+    throw new Error("CLIENT_URL environment variable is not set");
+  }
 
-  // Generate verification token
+  // Generate verification token before saving user
   const verificationToken = jwt.sign(
-    { id: savedUser._id },
+    { id: newUser._id },
     process.env.JWT_SECRET,
     { expiresIn: "24h" }
   );
 
-  // Send backend URL for local testing
+  // Prepare email content
   const clientUrl = process.env.CLIENT_URL.replace(/\/$/, ''); // Remove trailing slash
   const verifyUrl = `${clientUrl}/verify/${verificationToken}`;
 
@@ -54,9 +58,21 @@ export const createUser = asyncHandler(async (req, res) => {
     <p>Click below to verify your email:</p>
     <a href="${verifyUrl}" target="_blank">Verify Email</a>
     <p>This link expires in 24 hours.</p>
+    <p>If the button doesn't work, copy and paste this link into your browser:</p>
+    <p>${verifyUrl}</p>
   `;
 
-  await sendEmail(email, "Verify your email", html);
+  // Try to send email first, only save user if email is sent successfully
+  try {
+    await sendEmail(email, "Verify your email", html);
+  } catch (emailError) {
+    // If email fails, don't create the user
+    res.status(500);
+    throw new Error(`Failed to send verification email: ${emailError.message}`);
+  }
+
+  // Only save user if email was sent successfully
+  const savedUser = await newUser.save();
 
   res.status(201).json({
     message: "User registered successfully. Please check your email to verify your account.",

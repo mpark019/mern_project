@@ -56,10 +56,10 @@ export default function Login() {
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 grid place-items-center shadow-md">
+            {/* <div className="h-10 w-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 grid place-items-center shadow-md">
               <span className="text-white text-lg font-bold">P</span>
-            </div>
-            <h1 className="text-xl font-semibold text-white">Project</h1>
+            </div> */}
+            <h1 className="text-xl font-semibold text-white">YummyYummy</h1>
           </Link>
           <nav className="flex items-center gap-4 text-sm">
             <Link className="text-white hover:text-gray-400" to="/signup">Sign up</Link>

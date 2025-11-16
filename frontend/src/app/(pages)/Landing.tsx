@@ -10,7 +10,7 @@ function Landing() {
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="text-xl font-semibold text-white">Project</h1>
+              <h1 className="text-xl font-semibold text-white">YummyYummy</h1>
             </div>
           </div>
 
@@ -27,7 +27,7 @@ function Landing() {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
               <h2 className="text-4xl md:text-5xl font-extrabold leading-tight text-white">
-                yabadabadoo
+                Calorie Tracker
               </h2>
 
               <div className="mt-8 flex flex-wrap gap-3">

@@ -28,18 +28,12 @@ export default function Signup() {
         throw new Error(errorMsg)
       }
 
-      // Store token in localStorage
-      if (data.token) {
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('user', JSON.stringify({
-          _id: data._id,
-          username: data.username,
-          email: data.email
-        }))
-      }
-
-      setMessage('Account created successfully!')
-      setTimeout(() => navigate('/app'), 1000)
+      // User is created but NOT logged in yet - they need to verify email first
+      // Don't store token or redirect to /app
+      setMessage('Account created successfully! Please check your email to verify your account before logging in.')
+      
+      // Redirect to login page after showing success message
+      setTimeout(() => navigate('/login'), 3000)
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Error creating account'
       setMessage(errorMsg)
@@ -60,10 +54,10 @@ export default function Signup() {
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 grid place-items-center shadow-md">
-              <span className="text-white text-lg font-bold">P</span>
-            </div>
-            <h1 className="text-xl font-semibold text-white">Project</h1>
+            {/* <div className="h-10 w-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 grid place-items-center shadow-md"> */}
+              {/* <span className="text-white text-lg font-bold">P</span> */}
+            {/* </div> */}
+            <h1 className="text-xl font-semibold text-white">YummyYummy</h1>
           </Link>
           <nav className="flex items-center gap-4 text-sm">
             <Link className="text-white hover:text-gray-400" to="/login">Sign in</Link>

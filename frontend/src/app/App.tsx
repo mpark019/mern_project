@@ -37,17 +37,34 @@ function App() {
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [editFormData, setEditFormData] = useState({ username: '', email: '', password: '' })
 
-  // Load current user
+  // Check authentication and load current user
   useEffect(() => {
+    const token = localStorage.getItem('token')
     const userStr = localStorage.getItem('user')
+    
+    // If no token, redirect to login
+    if (!token) {
+      navigate('/login')
+      return
+    }
+    
+    // Load user data if available
     if (userStr) {
       try {
         setCurrentUser(JSON.parse(userStr))
       } catch (e) {
         console.error('Failed to parse user from localStorage', e)
+        // If user data is corrupted, clear everything and redirect
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        navigate('/login')
       }
+    } else {
+      // If no user data but token exists, try to fetch user
+      // This handles cases where token exists but user data is missing
+      navigate('/login')
     }
-  }, [])
+  }, [navigate])
 
   // Logout function
   const logout = () => {
