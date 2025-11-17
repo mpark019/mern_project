@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/screens/ScanFoodScreen.dart';
 import '../screens/LoginScreen.dart';
 import '../screens/RegisterScreen.dart';
 import '../screens/HomeScreen.dart';
@@ -8,6 +7,7 @@ import '../screens/ProfileScreen.dart';
 import '../screens/UserDetailsScreen.dart';
 import '../screens/CalorieListScreen.dart';
 import '../screens/AddCalorieScreen.dart';
+import '../screens/ScanFoodScreen.dart';
 
 class AppRoutes {
   static const login = "/login";
@@ -29,6 +29,7 @@ class AppRoutes {
     userDetails: (context) => const UserDetailsScreen(),
     calories: (_) => const CalorieListScreen(),
     addCalorie: (_) => const AddCalorieScreen(),
-    scan: (_) => const ScanFoodScreen(),
+    // note: no const here on purpose
+    scan: (_) => ScanFoodScreen(),
   };
 }

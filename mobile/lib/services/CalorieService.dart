@@ -4,9 +4,16 @@ import '../utils/GlobalData.dart';
 import '../models/CalorieLog.dart';
 
 class CalorieService {
-  static const String baseURL = "http://10.0.2.2:5050/calories";
+  static const String baseUrl = "http://10.0.2.2:5050";
 
-  // Add a new calorie log
+  static Map<String, String> _headers() {
+    return {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer ${GlobalData.token}",
+    };
+  }
+
+  // Create new log
   static Future<Map<String, dynamic>> addLog({
     required String meal,
     required int calories,
@@ -15,58 +22,89 @@ class CalorieService {
     required int fats,
     required String date,
   }) async {
-    final url = Uri.parse(baseURL);
+    final url = Uri.parse("$baseUrl/calories");
 
-    final res = await http.post(
-      url,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer ${GlobalData.token}",
-      },
-      body: jsonEncode({
-        "meal": meal,
-        "calories": calories,
-        "protein": protein,
-        "carbs": carbs,
-        "fats": fats,
-        "date": date,
-      }),
-    );
+    final body = {
+      "meal": meal,
+      "calories": calories,
+      "protein": protein,
+      "carbs": carbs,
+      "fats": fats,
+      "date": date,
+    };
 
-    final data = jsonDecode(res.body);
+    final res =
+        await http.post(url, headers: _headers(), body: jsonEncode(body));
 
-    if (res.statusCode == 201) {
-      return {"success": true};
-    }
-
-    return {"error": data["message"] ?? "Failed to add log"};
+    return jsonDecode(res.body);
   }
 
-  // Get logs for a specific date
+  // Get logs by specific date
   static Future<Map<String, dynamic>> getLogsByDate(String date) async {
-    final url = Uri.parse("$baseURL/date/$date");
+    final url = Uri.parse("$baseUrl/calories/date/$date");
 
-    final res = await http.get(
-      url,
-      headers: {"Authorization": "Bearer ${GlobalData.token}"},
-    );
-
+    final res = await http.get(url, headers: _headers());
     final data = jsonDecode(res.body);
 
-    if (res.statusCode == 200) {
-      final meals = (data["meals"] as List)
-          .map((e) => CalorieLog.fromJson(e))
-          .toList();
-
-      return {
-        "meals": meals,
-        "totalCalories": data["totalCalories"],
-        "totalProtein": data["totalProtein"],
-        "totalCarbs": data["totalCarbs"],
-        "totalFats": data["totalFats"],
-      };
+    // If backend returned an error
+    if (data is Map && data.containsKey("error")) {
+      return {"error": data["error"]};
     }
 
-    return {"error": data["message"] ?? "Failed to load logs"};
+    // Ensure meals are mapped to model objects
+    final mealsJson = data["meals"] ?? [];
+
+    final meals = (mealsJson as List)
+        .map((e) => CalorieLog.fromJson(e))
+        .toList();
+
+    return {
+      "meals": meals,
+      "totalCalories": data["totalCalories"] ?? 0,
+      "totalProtein": data["totalProtein"] ?? 0,
+      "totalCarbs": data["totalCarbs"] ?? 0,
+      "totalFats": data["totalFats"] ?? 0,
+    };
+  }
+
+  // Delete one log
+  static Future<void> deleteLog(String id) async {
+    final url = Uri.parse("$baseUrl/calories/$id");
+    await http.delete(url, headers: _headers());
+  }
+
+  // Update existing log
+  static Future<void> updateLog({
+    required String id,
+    required String meal,
+    required int calories,
+    required int protein,
+    required int carbs,
+    required int fats,
+    required String date,
+  }) async {
+    final url = Uri.parse("$baseUrl/calories/$id");
+
+    final body = {
+      "meal": meal,
+      "calories": calories,
+      "protein": protein,
+      "carbs": carbs,
+      "fats": fats,
+      "date": date,
+    };
+
+    await http.patch(url, headers: _headers(), body: jsonEncode(body));
+  }
+
+  // Get all logs (optional for list screen)
+  static Future<List<CalorieLog>> getLogs() async {
+    final url = Uri.parse("$baseUrl/calories");
+    final res = await http.get(url, headers: _headers());
+
+    final data = jsonDecode(res.body);
+    final list = data["meals"] as List;
+
+    return list.map((e) => CalorieLog.fromJson(e)).toList();
   }
 }
