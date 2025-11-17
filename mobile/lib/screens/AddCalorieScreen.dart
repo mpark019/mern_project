@@ -93,4 +93,10 @@ class _AddCalorieScreenState extends State<AddCalorieScreen> {
       ),
     );
   }
+  @override
+  void initState() {
+    super.initState();
+    dateCtrl.text = DateTime.now().toIso8601String().split("T")[0];
+  }
+
 }

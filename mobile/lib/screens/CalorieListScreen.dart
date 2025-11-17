@@ -19,32 +19,38 @@ class _CalorieListScreenState extends State<CalorieListScreen> {
     loadLogs();
   }
 
-  void loadLogs() async {
-    final data = await CalorieService.getLogs();
+  Future<void> loadLogs() async {
+    final today = DateTime.now().toIso8601String().split("T")[0];
+    final res = await CalorieService.getLogsByDate(today);
 
-    setState(() {
-      logs = data.map<CalorieLog>((json) => CalorieLog.fromJson(json)).toList();
-      loading = false;
-    });
+    if (!mounted) return;
+
+    if (res.containsKey("error")) {
+      setState(() {
+        loading = false;
+        logs = [];
+      });
+    } else {
+      setState(() {
+        loading = false;
+        logs = res["meals"];
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Calorie Logs")),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.pushNamed(context, "/calories/add"),
-        child: const Icon(Icons.add),
-      ),
+      appBar: AppBar(title: const Text("Today's Meals")),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
               itemCount: logs.length,
-              itemBuilder: (context, index) {
-                final log = logs[index];
+              itemBuilder: (_, i) {
+                final item = logs[i];
                 return ListTile(
-                  title: Text(log.meal),
-                  subtitle: Text("${log.calories} calories"),
+                  title: Text(item.meal),
+                  subtitle: Text("Calories: ${item.calories}"),
                 );
               },
             ),
