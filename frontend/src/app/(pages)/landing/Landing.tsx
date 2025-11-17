@@ -47,7 +47,7 @@ function Landing() {
                   to="/signup"
                   className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold text-lg shadow-lg transition-all"
                 >
-                  Start Tracking Free
+                  Start Tracking
                 </Link>
                 <Link 
                   to="/login"
