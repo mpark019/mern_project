@@ -11,6 +11,8 @@ import {
   getCurrentUser,
   getUserByUsername,
   changePassword,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/userController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -23,6 +25,8 @@ interface JwtPayload {
 // Public routes 
 router.post("/", createUser); // Register new user
 router.post("/login", loginUser); // Login user
+router.post("/forgot-password", forgotPassword); // Request password reset
+router.post("/reset-password/:token", resetPassword); // Reset password with token
 
 // VERIFY EMAIL - Public route
 router.get("/verify/:token", async (req: Request, res: Response): Promise<void> => {

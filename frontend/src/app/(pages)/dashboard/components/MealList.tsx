@@ -28,7 +28,7 @@ export function MealList({
     return (
       <div className="text-center py-8 text-gray-400">
         <p>No meals logged for today</p>
-        <p className="text-sm mt-2">Click "+ Add Meal" to get started</p>
+        <p className="text-sm mt-2">Click "Add Meal" to get started</p>
       </div>
     );
   }

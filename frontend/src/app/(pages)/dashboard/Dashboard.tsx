@@ -371,7 +371,7 @@ function Dashboard() {
               }}
               className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full text-sm font-semibold transition-colors"
             >
-              {showAddForm ? 'Cancel' : '+ Add Meal'}
+              {showAddForm ? 'Cancel' : 'Add Meal'}
             </button>
           </div>
 

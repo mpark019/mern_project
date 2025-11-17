@@ -240,7 +240,7 @@ export const getUserByUsername = asyncHandler(async (req: Request, res: Response
   });
 });
 
-// change user password (requires current password verification)
+// change user password
 export const changePassword = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { currentPassword, newPassword } = req.body;
@@ -284,5 +284,121 @@ export const changePassword = asyncHandler(async (req: Request, res: Response): 
   await user.save();
 
   res.status(200).json({ message: "Password updated successfully" });
+});
+
+// forgot password - send reset link via email
+export const forgotPassword = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { email } = req.body;
+
+  if (!email) {
+    const error = new Error("Please provide an email address") as CustomError;
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Find user by email
+  const user = await UserModel.findOne({ email });
+
+  if (!user) {
+    res.status(200).json({
+      message: "If an account with that email exists, a password reset link has been sent.",
+    });
+    return;
+  }
+
+  // Validate
+  if (!process.env.CLIENT_URL) {
+    res.status(500);
+    throw new Error("CLIENT_URL environment variable is not set");
+  }
+
+  // Generate password reset token
+  const resetToken = jwt.sign(
+    { id: user._id, type: "password-reset" },
+    process.env.JWT_SECRET as string,
+    { expiresIn: "1h" }
+  );
+
+  // Prepare email content
+  const clientUrl = process.env.CLIENT_URL.replace(/\/$/, '');
+  const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
+
+  const html = `
+    <h3>Password Reset Request</h3>
+    <p>Hello ${user.username},</p>
+    <p>You requested to reset your password. Click the link below to reset it:</p>
+    <a href="${resetUrl}" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
+    <p>This link expires in 1 hour.</p>
+    <p>If you didn't request this, please ignore this email.</p>
+    <p>If the button doesn't work, copy and paste this link into your browser:</p>
+    <p>${resetUrl}</p>
+  `;
+
+  try {
+    await sendEmail(email, "Password Reset Request", html);
+    res.status(200).json({
+      message: "If an account with that email exists, a password reset link has been sent.",
+    });
+  } catch (emailError: any) {
+    console.error("Failed to send password reset email:", emailError);
+    res.status(500);
+    throw new Error(`Failed to send password reset email: ${emailError.message}`);
+  }
+});
+
+// reset password
+export const resetPassword = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  if (!newPassword) {
+    const error = new Error("Please provide a new password") as CustomError;
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (newPassword.length < 6) {
+    const error = new Error("Password must be at least 6 characters long") as CustomError;
+    error.statusCode = 400;
+    throw error;
+  }
+
+  try {
+    // Verify and decode the reset token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string; type?: string };
+
+    // Verify it's a password reset token
+    if (decoded.type !== "password-reset") {
+      const error = new Error("Invalid reset token") as CustomError;
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Find user by ID from token
+    const user = await UserModel.findById(decoded.id);
+
+    if (!user) {
+      const error = new Error("User not found") as CustomError;
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password has been reset successfully" });
+  } catch (error: any) {
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      const customError = new Error("Invalid or expired reset token") as CustomError;
+      customError.statusCode = 400;
+      throw customError;
+    }
+    throw error;
+  }
 });
 
