@@ -5,6 +5,8 @@ import '../screens/HomeScreen.dart';
 import '../screens/CardsScreen.dart';
 import '../screens/ProfileScreen.dart';
 import '../screens/UserDetailsScreen.dart';
+import '../screens/CalorieListScreen.dart';
+import '../screens/AddCalorieScreen.dart';
 
 class AppRoutes {
   static const login = "/login";
@@ -13,6 +15,8 @@ class AppRoutes {
   static const cards = "/cards";
   static const profile = "/profile";
   static const userDetails = "/user-details";
+  static const calories = "/calories";
+  static const addCalorie = "/calories/add";
 
   static Map<String, WidgetBuilder> routes = {
     login: (context) => const LoginScreen(),
@@ -21,5 +25,7 @@ class AppRoutes {
     cards: (context) => const CardsScreen(),
     profile: (context) => const ProfileScreen(),
     userDetails: (context) => const UserDetailsScreen(),
+    calories: (_) => const CalorieListScreen(),
+    addCalorie: (_) => const AddCalorieScreen(),
   };
 }
