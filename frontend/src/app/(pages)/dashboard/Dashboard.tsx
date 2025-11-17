@@ -1,28 +1,32 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import { GL } from '../../../components/gl';
 import { SummaryBar } from './components/SummaryBar';
 import { AddMealForm } from './components/AddMealForm';
 import { EditMealForm } from './components/EditMealForm';
 import { MealList } from './components/MealList';
 import { ScanFoodButton } from './components/ScanFoodButton';
+import { DatePicker } from './components/DatePicker';
 import type { CalorieLog, CurrentUser, MealFormData, TodayTotals } from './types';
 import { API_URL, getAuthHeaders, getLocalDateString } from './utils';
 
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { date: urlDate } = useParams<{ date?: string }>();
   const [calorieLogs, setCalorieLogs] = useState<CalorieLog[]>([]);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const today = getLocalDateString();
+  
   const [formData, setFormData] = useState<MealFormData>({
     meal: '',
     calories: '',
     protein: '',
     carbs: '',
     fats: '',
-    date: getLocalDateString(),
+    date: urlDate || today,
   });
   const [editingLog, setEditingLog] = useState<CalorieLog | null>(null);
   const [editFormData, setEditFormData] = useState<MealFormData>({
@@ -31,10 +35,17 @@ function Dashboard() {
     protein: '',
     carbs: '',
     fats: '',
-    date: '',
+    date: urlDate || '',
   });
   const [showAddForm, setShowAddForm] = useState(false);
   const shouldAutoSubmitRef = useRef(false);
+
+  // Update form date when URL date changes
+  useEffect(() => {
+    const dateToUse = urlDate || today;
+    setFormData(prev => ({ ...prev, date: dateToUse }));
+    setEditFormData(prev => ({ ...prev, date: urlDate || '' }));
+  }, [urlDate, today]);
 
   // Auto submit when formData is populated from scan
   useEffect(() => {
@@ -291,12 +302,12 @@ function Dashboard() {
     }
   }, [currentUser]);
 
-  // Filter logs for today
-  const today = getLocalDateString();
-  const todayLogs = calorieLogs.filter(log => log.date === today);
+  // Determine the date to display
+  const displayDate = urlDate || today;
+  const displayLogs = calorieLogs.filter(log => log.date === displayDate);
 
-  // Calculate today's totals
-  const todayTotals: TodayTotals = todayLogs.reduce(
+  // Calculate totals for the display date
+  const summaryTotals: TodayTotals = displayLogs.reduce(
     (acc, log) => ({
       calories: acc.calories + log.calories,
       protein: acc.protein + log.protein,
@@ -305,6 +316,31 @@ function Dashboard() {
     }),
     { calories: 0, protein: 0, carbs: 0, fats: 0 }
   );
+
+  // Format date display helper
+  const formatDateDisplay = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr + 'T00:00:00');
+      const todayDate = new Date();
+      const yesterday = new Date(todayDate);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (dateStr === getLocalDateString(todayDate)) {
+        return "Today";
+      } else if (dateStr === getLocalDateString(yesterday)) {
+        return "Yesterday";
+      } else {
+        return date.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      }
+    } catch {
+      return dateStr;
+    }
+  };
 
   // Get user's calorie goal, default to 2000
   const goal = currentUser?.calorieGoal ?? 2000;
@@ -357,22 +393,52 @@ function Dashboard() {
           </div>
         )}
 
-        <SummaryBar totals={todayTotals} goal={goal} />
+        <SummaryBar totals={summaryTotals} goal={goal} selectedDate={displayDate} />
 
         <main className="flex-1 w-full max-w-2xl mx-auto px-4 pt-4 pb-32">
+          {/* Back to Today Button */}
+          {urlDate && (
+            <div className="mb-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="mb-3 text-white/80 hover:text-white flex items-center gap-2 transition-colors"
+              >
+                ← Back to Today
+              </button>
+              <h1 className="text-2xl md:text-3xl font-semibold text-white">
+                {formatDateDisplay(displayDate)}
+              </h1>
+              <p className="text-sm text-gray-400 mt-1">{displayDate}</p>
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg md:text-xl font-semibold text-white">
-              Today's Log
+              Meals
             </h2>
-            <button
-              onClick={() => {
-                setShowAddForm(!showAddForm);
-                setEditingLog(null);
-              }}
-              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full text-sm font-semibold transition-colors"
-            >
-              {showAddForm ? 'Cancel' : 'Add Meal'}
-            </button>
+            <div className="flex items-center gap-2">
+              <DatePicker
+                selectedDate={displayDate}
+                onDateChange={(newDate) => {
+                  if (newDate === today) {
+                    navigate('/dashboard');
+                  } else {
+                    navigate(`/dashboard/day/${newDate}`);
+                  }
+                }}
+                today={today}
+                onClose={() => setShowAddForm(false)}
+              />
+              <button
+                onClick={() => {
+                  setShowAddForm(!showAddForm);
+                  setEditingLog(null);
+                }}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full text-sm font-semibold transition-colors"
+              >
+                {showAddForm ? 'Cancel' : 'Add Meal'}
+              </button>
+            </div>
           </div>
 
           {showAddForm && !editingLog && (
@@ -395,11 +461,12 @@ function Dashboard() {
           )}
 
           <MealList
-            meals={todayLogs}
+            meals={displayLogs}
             onEdit={handleEdit}
             onDelete={deleteCalorieLog}
             loading={loading}
             editingLog={editingLog}
+            showDate={false}
           />
         </main>
 
@@ -413,7 +480,7 @@ function Dashboard() {
               protein: data.totalProtein.toString(),
               carbs: data.totalCarbs.toString(),
               fats: data.totalFats.toString(),
-              date: getLocalDateString(),
+              date: displayDate,
             });
             setMessage('Food scanned successfully! Added to your log.');
           }}

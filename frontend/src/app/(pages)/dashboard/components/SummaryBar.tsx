@@ -1,8 +1,10 @@
 import type { TodayTotals } from '../types';
+import { getLocalDateString } from '../utils';
 
 interface SummaryBarProps {
   totals: TodayTotals;
   goal: number;
+  selectedDate?: string;
 }
 
 function MacroChip({
@@ -28,17 +30,43 @@ function MacroChip({
   );
 }
 
-export function SummaryBar({ totals, goal }: SummaryBarProps) {
+function formatDateDisplay(dateStr: string) {
+  try {
+    const date = new Date(dateStr + 'T00:00:00');
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (dateStr === getLocalDateString(today)) {
+      return { label: "Today's Intake", display: date.toLocaleDateString() };
+    } else if (dateStr === getLocalDateString(yesterday)) {
+      return { label: "Yesterday's Intake", display: date.toLocaleDateString() };
+    } else {
+      return { 
+        label: date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }), 
+        display: date.toLocaleDateString() 
+      };
+    }
+  } catch {
+    return { label: dateStr, display: dateStr };
+  }
+}
+
+export function SummaryBar({ totals, goal, selectedDate }: SummaryBarProps) {
+  const today = getLocalDateString();
+  const displayDate = selectedDate || today;
+  const dateInfo = formatDateDisplay(displayDate);
+
   return (
     <div className="sticky top-4 z-40 w-full px-4 flex justify-center mt-4">
       <div className="w-full max-w-2xl bg-black/60 backdrop-blur-md shadow-xl rounded-3xl px-6 py-4 flex flex-col gap-3">
         <div className="flex justify-between items-baseline">
           <div className="flex flex-col">
             <span className="text-[11px] uppercase tracking-[0.15em] text-gray-300">
-              {new Date().toLocaleDateString()}
+              {dateInfo.display}
             </span>
             <span className="text-sm md:text-base font-semibold text-white">
-              Today's Intake
+              {dateInfo.label}
             </span>
           </div>
           <div className="text-right">
