@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GL } from '../../../components/gl';
 import { SummaryBar } from './components/SummaryBar';
@@ -7,7 +7,7 @@ import { EditMealForm } from './components/EditMealForm';
 import { MealList } from './components/MealList';
 import { ScanFoodButton } from './components/ScanFoodButton';
 import type { CalorieLog, CurrentUser, MealFormData, TodayTotals } from './types';
-import { API_URL, getAuthHeaders } from './utils';
+import { API_URL, getAuthHeaders, getLocalDateString } from './utils';
 
 const GOAL = 3000;
 
@@ -23,7 +23,7 @@ function Dashboard() {
     protein: '',
     carbs: '',
     fats: '',
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateString(),
   });
   const [editingLog, setEditingLog] = useState<CalorieLog | null>(null);
   const [editFormData, setEditFormData] = useState<MealFormData>({
@@ -35,6 +35,15 @@ function Dashboard() {
     date: '',
   });
   const [showAddForm, setShowAddForm] = useState(false);
+  const shouldAutoSubmitRef = useRef(false);
+
+  // Auto-submit when formData is populated from scan
+  useEffect(() => {
+    if (shouldAutoSubmitRef.current && formData.meal && formData.calories) {
+      shouldAutoSubmitRef.current = false;
+      createCalorieLog();
+    }
+  }, [formData]);
 
   // Check authentication and load current user
   useEffect(() => {
@@ -105,7 +114,7 @@ function Dashboard() {
           protein,
           carbs,
           fats,
-          date: formData.date || new Date().toISOString().split('T')[0],
+          date: formData.date || getLocalDateString(),
         }),
       });
       if (response.ok) {
@@ -116,7 +125,7 @@ function Dashboard() {
           protein: '',
           carbs: '',
           fats: '',
-          date: new Date().toISOString().split('T')[0],
+          date: getLocalDateString(),
         });
         setShowAddForm(false);
         fetchCalorieLogs();
@@ -258,7 +267,7 @@ function Dashboard() {
   }, [currentUser]);
 
   // Filter logs for today
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
   const todayLogs = calorieLogs.filter(log => log.date === today);
 
   // Calculate today's totals
@@ -363,7 +372,25 @@ function Dashboard() {
           />
         </main>
 
-        <ScanFoodButton />
+        <ScanFoodButton
+          onScanComplete={(data) => {
+            // Automatically add the meal to the log using existing createCalorieLog function
+            const mealNames = data.foods.map(f => f.name).join(', ');
+            shouldAutoSubmitRef.current = true;
+            setFormData({
+              meal: mealNames,
+              calories: data.totalCalories.toString(),
+              protein: data.totalProtein.toString(),
+              carbs: data.totalCarbs.toString(),
+              fats: data.totalFats.toString(),
+              date: getLocalDateString(),
+            });
+            setMessage('Food scanned successfully! Added to your log.');
+          }}
+          onError={(error) => {
+            setMessage('Error scanning food: ' + error);
+          }}
+        />
       </div>
     </>
   );
