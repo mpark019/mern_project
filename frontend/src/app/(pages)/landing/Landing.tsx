@@ -36,7 +36,7 @@ function Landing() {
           <section className="py-20 md:py-32">
             <div className="text-center max-w-3xl mx-auto">
               <h1 className="text-5xl md:text-6xl font-extrabold leading-tight text-white mb-6">
-                Plan Wisely
+                Track Wisely
                 <span className="block text-orange-400">Start Burning</span>
               </h1>
               <p className="text-xl text-white/80 mb-10 leading-relaxed">
