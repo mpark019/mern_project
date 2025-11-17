@@ -1,5 +1,4 @@
-import { Link } from 'react-router-dom'
-import { GL } from '../../components/gl'
+import { GL } from '../../../components/gl'
 
 function Landing() {
   return (

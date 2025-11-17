@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { GL } from "../../components/gl";
+import { GL } from "../../../components/gl";
 
 export default function VerifyEmail() {
   const { token } = useParams();

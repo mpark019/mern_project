@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { GL } from '../../components/gl'
+import { GL } from '../../../components/gl'
 
 export default function Signup() {
   const navigate = useNavigate()
