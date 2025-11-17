@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/screens/ScanFoodScreen.dart';
 import '../screens/LoginScreen.dart';
 import '../screens/RegisterScreen.dart';
 import '../screens/HomeScreen.dart';
@@ -17,6 +18,7 @@ class AppRoutes {
   static const userDetails = "/user-details";
   static const calories = "/calories";
   static const addCalorie = "/calories/add";
+  static const scan = "/scan";
 
   static Map<String, WidgetBuilder> routes = {
     login: (context) => const LoginScreen(),
@@ -27,5 +29,6 @@ class AppRoutes {
     userDetails: (context) => const UserDetailsScreen(),
     calories: (_) => const CalorieListScreen(),
     addCalorie: (_) => const AddCalorieScreen(),
+    scan: (_) => const ScanFoodScreen(),
   };
 }
