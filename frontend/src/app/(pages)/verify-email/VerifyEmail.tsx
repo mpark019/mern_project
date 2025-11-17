@@ -10,11 +10,11 @@ export default function VerifyEmail() {
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        const response = await fetch(`http://localhost:5050/users/verify/${token}`);
-        const data = await response.json();
+        const response = await fetch(`/api/users/verify/${token}`);
+        const data = await response.json().catch(() => null);
         
         if (response.ok) {
-          if (data.message.includes("already verified")) {
+          if (data?.message?.includes("already verified")) {
             setStatus('already-verified');
             setMessage("Email Already Verified");
           } else {
@@ -23,7 +23,8 @@ export default function VerifyEmail() {
           }
         } else {
           setStatus('error');
-          setMessage(data.message || "Verification Failed");
+          const errorMsg = data?.error || data?.message || `Verification failed (${response.status})`;
+          setMessage(errorMsg);
         }
       } catch (err) {
         console.error("Verification error:", err);
@@ -34,6 +35,9 @@ export default function VerifyEmail() {
 
     if (token) {
       verifyEmail();
+    } else {
+      setStatus('error');
+      setMessage('Invalid verification link. Please check your email.');
     }
   }, [token]);
 
@@ -47,7 +51,7 @@ export default function VerifyEmail() {
             <div className="h-10 w-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 grid place-items-center shadow-md">
               <span className="text-white text-lg font-bold">P</span>
             </div>
-            <h1 className="text-xl font-semibold text-white">Project</h1>
+            <h1 className="text-xl font-semibold text-white">YummyYummy</h1>
           </Link>
           <nav className="flex items-center gap-4 text-sm">
             <Link className="text-white hover:text-gray-400" to="/login">Login</Link>
