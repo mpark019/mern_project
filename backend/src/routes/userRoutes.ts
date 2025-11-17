@@ -10,6 +10,7 @@ import {
   loginUser,
   getCurrentUser,
   getUserByUsername,
+  changePassword,
 } from "../controllers/userController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -64,6 +65,7 @@ router.get("/get-user/:username", getUserByUsername);
 router.get("/me", protect, getCurrentUser);
 router.get("/", protect, getUsers);
 router.get("/:id", protect, getUserById);
+router.patch("/:id/password", protect, changePassword); // More specific route first
 router.patch("/:id", protect, updateUser);
 router.delete("/:id", protect, deleteUser);
 

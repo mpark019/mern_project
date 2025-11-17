@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { GL } from '../../../components/gl';
 import { SummaryBar } from './components/SummaryBar';
 import { AddMealForm } from './components/AddMealForm';
@@ -9,7 +9,6 @@ import { ScanFoodButton } from './components/ScanFoodButton';
 import type { CalorieLog, CurrentUser, MealFormData, TodayTotals } from './types';
 import { API_URL, getAuthHeaders, getLocalDateString } from './utils';
 
-const GOAL = 3000;
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -37,7 +36,7 @@ function Dashboard() {
   const [showAddForm, setShowAddForm] = useState(false);
   const shouldAutoSubmitRef = useRef(false);
 
-  // Auto-submit when formData is populated from scan
+  // Auto submit when formData is populated from scan
   useEffect(() => {
     if (shouldAutoSubmitRef.current && formData.meal && formData.calories) {
       shouldAutoSubmitRef.current = false;
@@ -55,18 +54,44 @@ function Dashboard() {
       return;
     }
     
-    if (userStr) {
+    // Fetch current user from API to get latest data including calorieGoal
+    (async () => {
       try {
-        setCurrentUser(JSON.parse(userStr));
+        const response = await fetch('/api/users/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const userData = await response.json();
+          setCurrentUser(userData);
+          localStorage.setItem('user', JSON.stringify({
+            _id: userData._id,
+            username: userData.username,
+            email: userData.email,
+            calorieGoal: userData.calorieGoal,
+          }));
+        } else {
+          // If unauthorized, redirect to login
+          if (response.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            navigate('/login');
+          }
+        }
       } catch (e) {
-        console.error('Failed to parse user from localStorage', e);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        navigate('/login');
+        console.error('Failed to fetch current user', e);
+        if (userStr) {
+          try {
+            setCurrentUser(JSON.parse(userStr));
+          } catch (parseError) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            navigate('/login');
+          }
+        } else {
+          navigate('/login');
+        }
       }
-    } else {
-      navigate('/login');
-    }
+    })();
   }, [navigate]);
 
   // Fetch all calorie logs
@@ -281,6 +306,9 @@ function Dashboard() {
     { calories: 0, protein: 0, carbs: 0, fats: 0 }
   );
 
+  // Get user's calorie goal, default to 2000
+  const goal = currentUser?.calorieGoal ?? 2000;
+
   return (
     <>
       <GL className="fixed inset-0 -z-10 blur" />
@@ -290,11 +318,14 @@ function Dashboard() {
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="text-xl font-semibold text-white">YummyYummy</h1>
+              <Link to="/dashboard" className="text-xl font-semibold text-white">YummyYummy</Link>
             </div>
           </div>
 
           <nav className="flex items-center gap-4 text-sm">
+            <Link to="/profile" className="text-white/80 hover:text-white">
+              Profile
+            </Link>
             <button onClick={logout} className="text-white hover:text-gray-400">
               Sign Out
             </button>
@@ -326,7 +357,7 @@ function Dashboard() {
           </div>
         )}
 
-        <SummaryBar totals={todayTotals} goal={GOAL} />
+        <SummaryBar totals={todayTotals} goal={goal} />
 
         <main className="flex-1 w-full max-w-2xl mx-auto px-4 pt-4 pb-32">
           <div className="flex items-center justify-between mb-2">
@@ -338,7 +369,7 @@ function Dashboard() {
                 setShowAddForm(!showAddForm);
                 setEditingLog(null);
               }}
-              className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-full text-sm font-semibold transition-colors"
+              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full text-sm font-semibold transition-colors"
             >
               {showAddForm ? 'Cancel' : '+ Add Meal'}
             </button>
@@ -374,7 +405,6 @@ function Dashboard() {
 
         <ScanFoodButton
           onScanComplete={(data) => {
-            // Automatically add the meal to the log using existing createCalorieLog function
             const mealNames = data.foods.map(f => f.name).join(', ');
             shouldAutoSubmitRef.current = true;
             setFormData({

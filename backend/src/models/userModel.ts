@@ -5,6 +5,7 @@ export interface User extends Document {
   email: string;
   password: string;
   verified: boolean;
+  calorieGoal?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -31,6 +32,7 @@ const userSchema: Schema<User> = new mongoose.Schema({
     minlength: [6, "Password must be at least 6 characters long"]
   },
   verified: { type: Boolean, default: false },
+  calorieGoal: { type: Number, default: 2000 },
 }, {
   timestamps: true // Automatically adds createdAt and updatedAt fields
 });

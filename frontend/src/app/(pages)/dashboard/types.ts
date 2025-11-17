@@ -14,6 +14,7 @@ export interface CurrentUser {
   _id: string;
   username: string;
   email: string;
+  calorieGoal?: number;
 }
 
 export interface MealFormData {

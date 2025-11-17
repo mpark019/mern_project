@@ -21,7 +21,7 @@ interface ScanFoodResponse {
 interface ScanFoodButtonProps {
   onScanComplete?: (data: ScanFoodResponse) => void;
   onError?: (error: string) => void;
-}
+} 
 
 export function ScanFoodButton({ onScanComplete, onError }: ScanFoodButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -128,7 +128,7 @@ export function ScanFoodButton({ onScanComplete, onError }: ScanFoodButtonProps)
     <>
       <div className="fixed bottom-8 left-0 w-full flex justify-center z-50">
         <button
-          className="flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-slate-600 to-sky-500 text-white font-bold shadow-lg hover:scale-[1.03] active:scale-[0.98] transition-transform"
+          className="flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-bold shadow-lg hover:scale-[1.03] active:scale-[0.98] transition-transform"
           onClick={() => setIsModalOpen(true)}
         >
           <svg
@@ -218,7 +218,7 @@ export function ScanFoodButton({ onScanComplete, onError }: ScanFoodButtonProps)
                     <button
                       onClick={scanFood}
                       disabled={isScanning}
-                      className="flex-1 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isScanning ? 'Scanning...' : 'Scan Food'}
                     </button>
@@ -281,9 +281,9 @@ export function ScanFoodButton({ onScanComplete, onError }: ScanFoodButtonProps)
                     </button>
                     <button
                       onClick={handleUseResult}
-                      className="flex-1 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-medium transition-colors"
+                      className="flex-1 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-medium transition-colors"
                     >
-                      Use This
+                      Add to Log
                     </button>
                   </div>
                 </div>

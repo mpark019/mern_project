@@ -131,6 +131,7 @@ export const updateUser = asyncHandler(async (req: Request, res: Response): Prom
     _id: updatedUser._id,
     username: updatedUser.username,
     email: updatedUser.email,
+    calorieGoal: updatedUser.calorieGoal,
     createdAt: updatedUser.createdAt,
     updatedAt: updatedUser.updatedAt,
   };
@@ -237,5 +238,51 @@ export const getUserByUsername = asyncHandler(async (req: Request, res: Response
     username: user.username,
     meals,
   });
+});
+
+// change user password (requires current password verification)
+export const changePassword = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    const error = new Error("Please provide both current password and new password") as CustomError;
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (newPassword.length < 6) {
+    const error = new Error("New password must be at least 6 characters long") as CustomError;
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Find user by ID
+  const user = await UserModel.findById(id);
+  
+  if (!user) {
+    const error = new Error("User not found") as CustomError;
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Verify current password
+  const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+  
+  if (!isPasswordValid) {
+    const error = new Error("Current password is incorrect") as CustomError;
+    error.statusCode = 401;
+    throw error;
+  }
+
+  // Hash new password
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  // Update password
+  user.password = hashedPassword;
+  await user.save();
+
+  res.status(200).json({ message: "Password updated successfully" });
 });
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { GL } from '../../../components/gl'
@@ -8,6 +8,12 @@ export default function Signup() {
   const [formData, setFormData] = useState({ username: '', email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [isSignedIn, setIsSignedIn] = useState(false)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    setIsSignedIn(!!token)
+  }, [])
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -53,7 +59,7 @@ export default function Signup() {
 
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
+          <Link to={isSignedIn ? "/dashboard" : "/"} className="flex items-center gap-3">
             {/* <div className="h-10 w-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 grid place-items-center shadow-md"> */}
               {/* <span className="text-white text-lg font-bold">P</span> */}
             {/* </div> */}
@@ -113,7 +119,7 @@ export default function Signup() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all disabled:opacity-50"
+                className="w-full bg-linear-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all disabled:opacity-50"
               >
                 {loading ? 'Creating...' : 'Create Account'}
               </button>

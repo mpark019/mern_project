@@ -45,7 +45,7 @@ export function SummaryBar({ totals, goal }: SummaryBarProps) {
             <div className="text-[11px] uppercase tracking-[0.15em] text-gray-300">
               Calories
             </div>
-            <div className="text-xl md:text-2xl font-bold text-sky-300">
+            <div className="text-xl md:text-2xl font-bold text-orange-300">
               {totals.calories} / {goal} cal
             </div>
           </div>
@@ -77,7 +77,7 @@ export function SummaryBar({ totals, goal }: SummaryBarProps) {
         <div className="w-full mt-1.5">
           <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
             <div
-              className="h-2.5 rounded-full bg-gradient-to-r from-sky-500 to-sky-400"
+              className="h-2.5 rounded-full bg-gradient-to-r from-orange-500 to-orange-400"
               style={{ width: `${Math.min((totals.calories / goal) * 100, 100)}%` }}
             />
           </div>
