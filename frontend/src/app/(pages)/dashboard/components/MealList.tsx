@@ -1,4 +1,4 @@
-import { formatTime } from '../utils';
+import { formatTime, getLocalDateString } from '../utils';
 import type { CalorieLog } from '../types';
 
 interface MealListProps {
@@ -7,6 +7,7 @@ interface MealListProps {
   onDelete: (id: string) => void;
   loading: boolean;
   editingLog: CalorieLog | null;
+  showDate?: boolean;
 }
 
 function MacroTag({ label, value }: { label: string; value: number }) {
@@ -17,17 +18,41 @@ function MacroTag({ label, value }: { label: string; value: number }) {
   );
 }
 
+function formatDateDisplay(dateStr: string) {
+  try {
+    const date = new Date(dateStr + 'T00:00:00');
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (dateStr === getLocalDateString(today)) {
+      return "Today";
+    } else if (dateStr === getLocalDateString(yesterday)) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
+      });
+    }
+  } catch {
+    return dateStr;
+  }
+}
+
 export function MealList({
   meals,
   onEdit,
   onDelete,
   loading,
   editingLog,
+  showDate = false,
 }: MealListProps) {
   if (meals.length === 0) {
     return (
       <div className="text-center py-8 text-gray-400">
-        <p>No meals logged for today</p>
+        <p>No meals logged</p>
         <p className="text-sm mt-2">Click "Add Meal" to get started</p>
       </div>
     );
@@ -41,9 +66,16 @@ export function MealList({
           className="flex items-center bg-black/70 backdrop-blur rounded-3xl shadow-md px-4 py-3 gap-3 transition-transform duration-150 hover:-translate-y-px hover:shadow-lg"
         >
           <div className="flex-1 flex items-center justify-between gap-4">
-            <div>
-              <div className="font-semibold text-white leading-tight">
-                {food.meal}
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <div className="font-semibold text-white leading-tight">
+                  {food.meal}
+                </div>
+                {showDate && (
+                  <span className="text-[10px] uppercase tracking-[0.1em] text-gray-400 px-2 py-0.5 rounded-full bg-white/5">
+                    {formatDateDisplay(food.date)}
+                  </span>
+                )}
               </div>
               <div className="text-[11px] uppercase tracking-[0.14em] text-gray-300 mt-0.5">
                 {food.createdAt ? formatTime(food.createdAt) : ''}
