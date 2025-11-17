@@ -11,6 +11,7 @@ class ScanFoodScreen extends StatefulWidget {
   State<ScanFoodScreen> createState() => _ScanFoodScreenState();
 }
 
+
 class _ScanFoodScreenState extends State<ScanFoodScreen> {
   File? image;
   bool loading = false;

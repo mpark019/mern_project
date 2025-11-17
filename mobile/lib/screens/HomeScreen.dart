@@ -150,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
 
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -208,36 +208,82 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _mealCard(CalorieLog item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(item.meal,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 6),
-          Text("${item.calories} cal",
-              style: const TextStyle(color: Colors.orange)),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _macroPill("P", item.protein),
-              const SizedBox(width: 6),
-              _macroPill("C", item.carbs),
-              const SizedBox(width: 6),
-              _macroPill("F", item.fats),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  return Container(
+    margin: const EdgeInsets.only(bottom: 14),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.05),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          item.meal,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 6),
+
+        Text("${item.calories} cal",
+            style: const TextStyle(color: Colors.orange)),
+        const SizedBox(height: 8),
+
+        Row(
+          children: [
+            _macroPill("P", item.protein),
+            const SizedBox(width: 6),
+            _macroPill("C", item.carbs),
+            const SizedBox(width: 6),
+            _macroPill("F", item.fats),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        Row(
+          children: [
+            // EDIT BUTTON
+            TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.blueGrey.shade700,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6)),
+              ),
+              onPressed: () {
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.addCalorie,
+                  arguments: item, // pass meal to edit
+                ).then((_) => loadTodayLogs());
+              },
+              child: const Text("Edit", style: TextStyle(color: Colors.white)),
+            ),
+
+            const SizedBox(width: 10),
+
+            // DELETE BUTTON
+            TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6)),
+              ),
+              onPressed: () async {
+                await CalorieService.deleteLog(item.id);
+                loadTodayLogs();
+              },
+              child: const Text("Delete", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        )
+      ],
+    ),
+  );
+}
+
 
   String _formatToday() {
     final now = DateTime.now();
