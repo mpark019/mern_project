@@ -10,20 +10,21 @@ export default function VerifyEmail() {
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        const response = await fetch(`http://localhost:5050/users/verify/${token}`);
-        const data = await response.json();
+        const response = await fetch(`/api/users/verify/${token}`);
+        const data = await response.json().catch(() => null);
         
         if (response.ok) {
-          if (data.message.includes("already verified")) {
+          if (data?.message?.includes("already verified")) {
             setStatus('already-verified');
-            setMessage("Email Already Verified");
+            setMessage("Email Verified");
           } else {
             setStatus('success');
             setMessage("Email Verified Successfully!");
           }
         } else {
           setStatus('error');
-          setMessage(data.message || "Verification Failed");
+          const errorMsg = data?.error || data?.message || `Verification failed (${response.status})`;
+          setMessage(errorMsg);
         }
       } catch (err) {
         console.error("Verification error:", err);
@@ -34,6 +35,9 @@ export default function VerifyEmail() {
 
     if (token) {
       verifyEmail();
+    } else {
+      setStatus('error');
+      setMessage('Invalid verification link. Please check your email.');
     }
   }, [token]);
 
@@ -44,10 +48,10 @@ export default function VerifyEmail() {
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 grid place-items-center shadow-md">
+            {/* <div className="h-10 w-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 grid place-items-center shadow-md">
               <span className="text-white text-lg font-bold">P</span>
-            </div>
-            <h1 className="text-xl font-semibold text-white">Project</h1>
+            </div> */}
+            <h1 className="text-xl font-semibold text-white">YummyYummy</h1>
           </Link>
           <nav className="flex items-center gap-4 text-sm">
             <Link className="text-white hover:text-gray-400" to="/login">Login</Link>
@@ -87,7 +91,7 @@ export default function VerifyEmail() {
                 <p className="text-gray-300 mb-6">Your account has been verified. You can now log in.</p>
                 <Link
                   to="/login"
-                  className="inline-block w-full bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all"
+                  className="inline-block w-full bg-linear-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all"
                 >
                   Go to Login
                 </Link>
@@ -98,17 +102,17 @@ export default function VerifyEmail() {
             {status === 'already-verified' && (
               <div className="text-center">
                 <div className="mb-6 flex justify-center">
-                  <div className="h-16 w-16 rounded-full bg-blue-500/20 border-4 border-blue-500 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="h-16 w-16 rounded-full bg-green-500/20 border-4 border-green-500 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-2">{message}</h2>
-                <p className="text-gray-300 mb-6">This account is already verified. You can log in now.</p>
+                <p className="text-gray-300 mb-6">This account is verified. Please proceed to login.</p>
                 <Link
                   to="/login"
-                  className="inline-block w-full bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all"
+                  className="inline-block w-full bg-linear-to-r bg-linear-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all"
                 >
                   Go to Login
                 </Link>
@@ -130,7 +134,7 @@ export default function VerifyEmail() {
                 <div className="space-y-3">
                   <Link
                     to="/signup"
-                    className="block w-full bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all"
+                    className="block w-full bg-linear-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all"
                   >
                     Sign Up Again
                   </Link>

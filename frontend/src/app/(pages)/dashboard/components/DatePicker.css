@@ -1,0 +1,59 @@
+.rdp {
+    --rdp-cell-size: 40px;
+    --rdp-accent-color: #f97316;
+    --rdp-background-color: rgba(255, 255, 255, 0.1);
+    --rdp-accent-color-dark: #ea580c;
+    --rdp-outline: 2px solid var(--rdp-accent-color);
+    --rdp-outline-selected: 3px solid var(--rdp-accent-color);
+    margin: 0;
+  }
+  
+  .rdp-day {
+    color: white;
+  }
+  
+  .rdp-day:hover:not([disabled]):not(.rdp-day_selected) {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+  
+  .rdp-day_selected,
+  .rdp-day_selected:focus-visible,
+  .rdp-day_selected:hover {
+    background-color: #f97316;
+    color: white;
+    font-weight: bold;
+  }
+  
+  .rdp-day_disabled {
+    opacity: 0.3;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .rdp-day_today {
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .rdp-head_cell {
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+  }
+  
+  .rdp-caption_label {
+    color: white;
+    font-weight: 600;
+  }
+  
+  .rdp-nav_button {
+    color: white;
+  }
+  
+  .rdp-nav_button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .rdp-root {
+    --rdp-accent-color: #f97316;
+  }
+  

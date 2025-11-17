@@ -16,11 +16,8 @@ export default function Profile() {
   const [savingGoal, setSavingGoal] = useState(false)
   const [goalMsg, setGoalMsg] = useState<string>('')
 
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [pwdMsg, setPwdMsg] = useState<string>('')
-  const [savingPwd, setSavingPwd] = useState(false)
+  const [sendingReset, setSendingReset] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -89,42 +86,28 @@ export default function Profile() {
     }
   }
 
-  async function changePassword() {
-    if (!user) return
-    if (newPassword !== confirmPassword) {
-      setPwdMsg('New passwords do not match')
+  async function requestPasswordReset() {
+    if (!user || !user.email) {
+      setPwdMsg('User email not found')
       return
     }
-    if (newPassword.length < 6) {
-      setPwdMsg('New password must be at least 6 characters')
-      return
-    }
-    const token = localStorage.getItem('token')
-    if (!token) {
-      setPwdMsg('You must be logged in')
-      return
-    }
-    setSavingPwd(true)
+    setSendingReset(true)
     setPwdMsg('')
     try {
-      const res = await fetch(`/api/users/${user._id}/password`, {
-        method: 'PATCH',
+      const res = await fetch('/api/users/forgot-password', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ currentPassword, newPassword }),
+        body: JSON.stringify({ email: user.email }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.message || 'Failed to change password')
-      setPwdMsg('Password updated successfully')
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
+      if (!res.ok) throw new Error(data?.message || data?.error || 'Failed to send reset email')
+      setPwdMsg('If an account with that email exists, a password reset link has been sent to your email.')
     } catch (e) {
-      setPwdMsg(e instanceof Error ? e.message : 'Error changing password')
+      setPwdMsg(e instanceof Error ? e.message : 'Error sending reset email')
     } finally {
-      setSavingPwd(false)
+      setSendingReset(false)
     }
   }
 
@@ -194,44 +177,20 @@ export default function Profile() {
 
           {/* Change Password */}
           <section className="rounded-2xl bg-black/70 backdrop-blur p-6">
-            <h3 className="text-white font-semibold mb-4">Change Password</h3>
+            <h3 className="text-white font-semibold mb-4 text-center">Change Password</h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-white/80 mb-2">Current password</label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white text-gray-800 border-2 border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-white/80 mb-2">New password</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white text-gray-800 border-2 border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-white/80 mb-2">Confirm new password</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white text-gray-800 border-2 border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none"
-                />
-              </div>
+              <p className="text-sm text-white/70 mb-4 text-center">
+                To change your password, please click the button below.
+              </p>
               <button
-                onClick={changePassword}
-                disabled={savingPwd}
+                onClick={requestPasswordReset}
+                disabled={sendingReset}
                 className="w-full px-5 py-3 rounded-xl bg-linear-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold shadow disabled:opacity-60"
               >
-                {savingPwd ? 'Updating…' : 'Update Password'}
+                {sendingReset ? 'Sending...' : 'Send Password Reset Link'}
               </button>
               {pwdMsg && (
-                <p className={`text-sm ${pwdMsg.includes('success') ? 'text-green-200' : 'text-red-200'}`}>{pwdMsg}</p>
+                <p className={`text-sm ${pwdMsg.includes('sent') || pwdMsg.includes('exists') ? 'text-green-200' : 'text-red-200'}`}>{pwdMsg}</p>
               )}
             </div>
           </section>
