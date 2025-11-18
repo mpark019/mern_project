@@ -16,6 +16,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int totalProtein = 0;
   int totalCarbs = 0;
   int totalFats = 0;
+  DateTime selectedDate = DateTime.now();
+
 
   List<CalorieLog> todayMeals = [];
   bool loading = true;
@@ -52,6 +54,39 @@ class _HomeScreenState extends State<HomeScreen> {
       totalFats = res["totalFats"];
     });
   }
+  Future<void> loadLogsByDate(DateTime date) async {
+  loading = true;
+  setState(() {});
+
+  final formatted =
+      "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+
+  final res = await CalorieService.getLogsByDate(formatted);
+
+  setState(() {
+    loading = false;
+    selectedDate = date;
+
+    if (res.containsKey("error")) {
+      todayMeals = [];
+      totalCalories = 0;
+      totalProtein = 0;
+      totalCarbs = 0;
+      totalFats = 0;
+      return;
+    }
+
+    todayMeals = (res["meals"] as List)
+        .map((e) => CalorieLog.fromJson(e))
+        .toList();
+
+    totalCalories = res["totalCalories"];
+    totalProtein = res["totalProtein"];
+    totalCarbs = res["totalCarbs"];
+    totalFats = res["totalFats"];
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -109,12 +144,42 @@ class _HomeScreenState extends State<HomeScreen> {
                   _intakeCard(),
                   const SizedBox(height: 28),
 
-                  const Text(
-                    "Today's Log",
-                    style: TextStyle(
-                        color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
+                  Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    const Text(
+      "Meals",
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+
+    ElevatedButton.icon(
+      onPressed: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: selectedDate,
+          firstDate: DateTime(2020),
+          lastDate: DateTime.now(),
+        );
+
+        if (picked != null) {
+          loadLogsByDate(picked);
+        }
+      },
+      icon: const Icon(Icons.calendar_today, size: 18),
+      label: const Text("Date"),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white12,
+        foregroundColor: Colors.white,
+      ),
+    ),
+  ],
+),
+const SizedBox(height: 12),
+
 
                   todayMeals.isEmpty
                       ? Center(
@@ -150,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
 
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -208,36 +273,82 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _mealCard(CalorieLog item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(item.meal,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 6),
-          Text("${item.calories} cal",
-              style: const TextStyle(color: Colors.orange)),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _macroPill("P", item.protein),
-              const SizedBox(width: 6),
-              _macroPill("C", item.carbs),
-              const SizedBox(width: 6),
-              _macroPill("F", item.fats),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  return Container(
+    margin: const EdgeInsets.only(bottom: 14),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.05),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          item.meal,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 6),
+
+        Text("${item.calories} cal",
+            style: const TextStyle(color: Colors.orange)),
+        const SizedBox(height: 8),
+
+        Row(
+          children: [
+            _macroPill("P", item.protein),
+            const SizedBox(width: 6),
+            _macroPill("C", item.carbs),
+            const SizedBox(width: 6),
+            _macroPill("F", item.fats),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        Row(
+          children: [
+            // EDIT BUTTON
+            TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.blueGrey.shade700,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6)),
+              ),
+              onPressed: () {
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.addCalorie,
+                  arguments: item, // pass meal to edit
+                ).then((_) => loadTodayLogs());
+              },
+              child: const Text("Edit", style: TextStyle(color: Colors.white)),
+            ),
+
+            const SizedBox(width: 10),
+
+            // DELETE BUTTON
+            TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6)),
+              ),
+              onPressed: () async {
+                await CalorieService.deleteLog(item.id);
+                loadTodayLogs();
+              },
+              child: const Text("Delete", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        )
+      ],
+    ),
+  );
+}
+
 
   String _formatToday() {
     final now = DateTime.now();
