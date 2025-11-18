@@ -11,7 +11,7 @@ vi.mock('../../models/calorieModel', () => ({
   },
 }));
 
-describe('Calorie Controller - Simple Tests', () => {
+describe('Calorie Controller Tests', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: ReturnType<typeof vi.fn>;
@@ -35,8 +35,7 @@ describe('Calorie Controller - Simple Tests', () => {
   });
 
   describe('addCalorieLog', () => {
-    it('should create a calorie log successfully', async () => {
-      // Arrange
+    it('Succesfully Create Calorie Log', async () => {
       mockRequest.body = {
         meal: 'Grilled Salmon',
         calories: 206,
@@ -63,7 +62,7 @@ describe('Calorie Controller - Simple Tests', () => {
       );
     });
 
-    it('should reject negative calorie values', async () => {
+    it('Reject Negative Macro Values', async () => {
       mockRequest.body = {
         meal: 'Test Meal',
         calories: -100,
@@ -85,7 +84,7 @@ describe('Calorie Controller - Simple Tests', () => {
   });
 
   describe('getCalorieLogs', () => {
-    it('should return all calorie logs for user', async () => {
+    it('Return All Calorie Logs for User', async () => {
       const mockLogs = [
         {
           _id: new mongoose.Types.ObjectId(),

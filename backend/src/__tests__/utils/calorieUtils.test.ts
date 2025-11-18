@@ -3,7 +3,7 @@ import { calculateTotalCalories, calculateProgress, isValidCalorieRange } from '
 
 describe('Calorie Utils', () => {
   describe('calculateTotalCalories', () => {
-    it('should calculate total calories correctly', () => {
+    it('Calculate Total Correctly', () => {
       const calories = [100, 200, 50];
 
       const result = calculateTotalCalories(calories);
@@ -11,7 +11,7 @@ describe('Calorie Utils', () => {
       expect(result).toBe(350);
     });
 
-    it('should return zero for empty array', () => {
+    it('Return Zero for Null Value', () => {
       const calories: number[] = [];
 
       const result = calculateTotalCalories(calories);
@@ -21,7 +21,7 @@ describe('Calorie Utils', () => {
   });
 
   describe('calculateProgress', () => {
-    it('should calculate progress percentage correctly', () => {
+    it('Calculate Calorie Percentage', () => {
       const consumed = 1500;
       const goal = 2000;
 
@@ -30,7 +30,7 @@ describe('Calorie Utils', () => {
       expect(result).toBe(75);
     });
 
-    it('should return zero when goal is zero', () => {
+    it('Return 0 when Goal is 0', () => {
       const consumed = 1000;
       const goal = 0;
 
@@ -41,7 +41,7 @@ describe('Calorie Utils', () => {
   });
 
   describe('isValidCalorieRange', () => {
-    it('should return true for valid calorie range', () => {
+    it('Valid Calorie Range', () => {
       const calories = 2000;
 
       const result = isValidCalorieRange(calories);
@@ -49,7 +49,7 @@ describe('Calorie Utils', () => {
       expect(result).toBe(true);
     });
 
-    it('should return false for negative calories', () => {
+    it('Return False for Negative Calories', () => {
       const calories = -100;
 
       const result = isValidCalorieRange(calories);
