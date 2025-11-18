@@ -19,13 +19,13 @@ class CalorieLog {
 
   factory CalorieLog.fromJson(Map<String, dynamic> json) {
     return CalorieLog(
-      id: json["_id"],
-      meal: json["meal"],
-      calories: json["calories"],
-      protein: json["protein"],
-      carbs: json["carbs"],
-      fats: json["fats"],
-      date: json["date"],
+      id: json["_id"] ?? "",
+      meal: json["meal"] ?? "",
+      calories: (json["calories"] ?? 0).toInt(),
+      protein: (json["protein"] ?? 0).toInt(),
+      carbs: (json["carbs"] ?? 0).toInt(),
+      fats: (json["fats"] ?? 0).toInt(),
+      date: json["date"] ?? "",
     );
   }
 }
