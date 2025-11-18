@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/APIService.dart';
 import '../utils/GlobalData.dart';
+import '../services/AuthService.dart';
+import '../services/UserService.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,93 +11,166 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final goalController = TextEditingController();
   bool loading = true;
-  String error = "";
-  final usernameCtrl = TextEditingController();
-  final emailCtrl = TextEditingController();
+  int calorieGoal = 2000;
 
   @override
   void initState() {
     super.initState();
-    _loadMe();
+    loadUserData();
   }
 
-  Future<void> _loadMe() async {
-    final res = await APIService.fetchCurrentUser();
-    if (!mounted) return;
+  Future<void> loadUserData() async {
+    final user = GlobalData.user;
+    calorieGoal = user?["calorieGoal"] ?? 2000;
+    goalController.text = calorieGoal.toString();
 
-    if (res.containsKey("error")) {
-      setState(() {
-        loading = false;
-        error = res["error"];
-      });
-    } else {
-      final user = res["user"] ?? {};
-      usernameCtrl.text = user["username"] ?? "";
-      emailCtrl.text = user["email"] ?? "";
-      setState(() {
-        loading = false;
-      });
-    }
+    setState(() => loading = false);
   }
 
-  Future<void> _save() async {
-    setState(() {
-      loading = true;
-      error = "";
-    });
+  Future<void> saveGoal() async {
+    final newGoal = int.tryParse(goalController.text) ?? calorieGoal;
+    await UserService.updateCalorieGoal(newGoal);
 
-    final res = await APIService.updateUser(GlobalData.userId, {
-      "username": usernameCtrl.text.trim(),
-      "email": emailCtrl.text.trim(),
-    });
+    setState(() => calorieGoal = newGoal);
 
-    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Calorie goal updated")),
+    );
+  }
 
-    if (res.containsKey("error")) {
-      setState(() {
-        loading = false;
-        error = res["error"];
-      });
-    } else {
-      setState(() {
-        loading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile updated")),
-      );
-    }
+  Future<void> sendResetLink() async {
+    await AuthService.sendPasswordReset(GlobalData.user?["email"]);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Password reset link sent")),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator(color: Colors.orange)),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Profile")),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: const Text(
+          "Profile",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Daily Calorie Goal",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (error.isNotEmpty)
-                    Text(error, style: const TextStyle(color: Colors.red)),
+                  const Text("Calories (kcal)",
+                      style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  const SizedBox(height: 10),
                   TextField(
-                    controller: usernameCtrl,
-                    decoration: const InputDecoration(labelText: "Username"),
+                    controller: goalController,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: emailCtrl,
-                    decoration: const InputDecoration(labelText: "Email"),
-                  ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 10),
                   ElevatedButton(
-                    onPressed: _save,
-                    child: const Text("Save"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      minimumSize: const Size(100, 45),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: saveGoal,
+                    child: const Text("Save",
+                        style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
             ),
+
+            const SizedBox(height: 40),
+
+            const Text(
+              "Change Password",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    "To change your password, click the button below.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70, fontSize: 15),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: sendResetLink,
+                    child: const Text(
+                      "Send Password Reset Link",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
