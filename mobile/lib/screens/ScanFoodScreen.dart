@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/FoodScanService.dart';
-import '../services/CalorieService.dart';
 
 class ScanFoodScreen extends StatefulWidget {
   const ScanFoodScreen({super.key});
@@ -11,7 +10,6 @@ class ScanFoodScreen extends StatefulWidget {
   State<ScanFoodScreen> createState() => _ScanFoodScreenState();
 }
 
-
 class _ScanFoodScreenState extends State<ScanFoodScreen> {
   File? image;
   bool loading = false;
@@ -19,78 +17,68 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> {
 
   final picker = ImagePicker();
 
+  Future pickGallery() async {
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+    setState(() => image = File(picked.path));
+    processImage();
+  }
+
   Future pickCamera() async {
     final picked = await picker.pickImage(source: ImageSource.camera);
     if (picked == null) return;
-
     setState(() => image = File(picked.path));
-    scanImage();
+    processImage();
   }
 
-  Future scanImage() async {
-    if (image == null) return;
-
+  Future processImage() async {
     setState(() => loading = true);
 
-    final res = await FoodScanService.scanFood(image!);
+    final result = await FoodScanService.scanAndSave(image!);
 
     setState(() {
-      scanResult = res;
+      scanResult = result;
       loading = false;
     });
-  }
-
-  Future addToLog() async {
-    if (scanResult == null) return;
-
-    await CalorieService.addLog(
-      meal: scanResult!["name"] ?? "Food Item",
-      calories: scanResult!["calories"] ?? 0,
-      protein: scanResult!["protein"] ?? 0,
-      carbs: scanResult!["carbs"] ?? 0,
-      fats: scanResult!["fats"] ?? 0,
-      date: DateTime.now().toString().split("T")[0],
-    );
-
-    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0E0E0E),
-      appBar: AppBar(title: const Text("Scan Food")),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              ElevatedButton.icon(
-                onPressed: pickCamera,
-                icon: const Icon(Icons.camera_alt),
-                label: const Text("Take Photo"),
-              ),
-              const SizedBox(height: 20),
-              if (image != null)
-                Image.file(image!, height: 200),
+      backgroundColor: Colors.black,
+      appBar: AppBar(title: const Text("Scan Food"), backgroundColor: Colors.black),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            ElevatedButton.icon(
+              icon: Icon(Icons.photo),
+              label: Text("Gallery"),
+              onPressed: pickGallery,
+            ),
+            SizedBox(height: 10),
+            ElevatedButton.icon(
+              icon: Icon(Icons.camera_alt),
+              label: Text("Camera"),
+              onPressed: pickCamera,
+            ),
+            SizedBox(height: 20),
 
-              if (loading) const CircularProgressIndicator(),
-              if (scanResult != null && !loading) ...[
-                Text("Detected: ${scanResult!['name']}",
-                    style: const TextStyle(color: Colors.white, fontSize: 20)),
-                const SizedBox(height: 10),
-                Text("Calories: ${scanResult!['calories']}"),
-                Text("Protein: ${scanResult!['protein']}"),
-                Text("Carbs: ${scanResult!['carbs']}"),
-                Text("Fats: ${scanResult!['fats']}"),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: addToLog,
-                  child: const Text("Add to Log"),
-                ),
-              ]
+            if (image != null) Image.file(image!, height: 200),
+
+            if (loading)
+              CircularProgressIndicator(color: Colors.orange),
+
+            if (scanResult != null && scanResult!["error"] == null) ...[
+              SizedBox(height: 20),
+              Text("Saved to Log ✔",
+                  style: TextStyle(color: Colors.green, fontSize: 18)),
             ],
-          ),
+
+            if (scanResult != null && scanResult!["error"] != null)
+              Text(scanResult!["error"],
+                  style: TextStyle(color: Colors.red)),
+          ],
         ),
       ),
     );

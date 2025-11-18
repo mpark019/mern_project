@@ -12,6 +12,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  DateTime selectedDate = DateTime.now();
+
   int totalCalories = 0;
   int totalProtein = 0;
   int totalCarbs = 0;
@@ -20,7 +22,9 @@ class _HomeScreenState extends State<HomeScreen> {
   List<CalorieLog> meals = [];
   bool loading = true;
 
-  DateTime selectedDate = DateTime.now();
+  String formatDate(DateTime d) {
+    return "${d.year}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}";
+  }
 
   @override
   void initState() {
@@ -28,14 +32,13 @@ class _HomeScreenState extends State<HomeScreen> {
     loadLogs();
   }
 
-  String formatDate(DateTime d) {
-    return "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-  }
-
   Future<void> loadLogs() async {
     setState(() => loading = true);
 
-    final res = await CalorieService.getLogsByDate(formatDate(selectedDate));
+    final dateStr = formatDate(selectedDate);
+    print("Mobile requesting logs for: $dateStr");
+
+    final res = await CalorieService.getLogsByDate(dateStr);
 
     if (res.containsKey("error")) {
       setState(() {
@@ -51,15 +54,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() {
       meals = res["meals"];
-      totalCalories = res["totalCalories"];
-      totalProtein = res["totalProtein"];
-      totalCarbs = res["totalCarbs"];
-      totalFats = res["totalFats"];
+      totalCalories = (res["totalCalories"] ?? 0).toInt();
+      totalProtein  = (res["totalProtein"] ?? 0).toInt();
+      totalCarbs    = (res["totalCarbs"] ?? 0).toInt();
+      totalFats     = (res["totalFats"] ?? 0).toInt();
       loading = false;
     });
   }
 
-  Future pickDate() async {
+  Future<void> pickDate() async {
     final picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
@@ -92,7 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.camera_alt, color: Colors.orange),
-            onPressed: () => Navigator.pushNamed(context, "/scan"),
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.scan)
+                .then((value) => loadLogs()),
           ),
           TextButton(
             onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
@@ -114,45 +118,41 @@ class _HomeScreenState extends State<HomeScreen> {
               .then((_) => loadLogs());
         },
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
       body: loading
           ? const Center(
-              child: CircularProgressIndicator(color: Colors.orange))
+              child: CircularProgressIndicator(color: Colors.orange),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Date text
                   Text(
                     "${selectedDate.month}/${selectedDate.day}/${selectedDate.year}",
                     style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500),
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
 
                   const SizedBox(height: 4),
-                  const Text(
-                    "Daily Intake",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  const Text("Daily Intake",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold)),
 
                   const SizedBox(height: 16),
                   _intakeCard(dailyGoal),
                   const SizedBox(height: 28),
 
-                  const Text(
-                    "Meals",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  const Text("Meals",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
 
                   meals.isEmpty
@@ -195,14 +195,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
           Text("CALORIES",
-              style: TextStyle(color: Colors.white70, fontSize: 12)),
+              style: const TextStyle(color: Colors.white70, fontSize: 12)),
           const SizedBox(height: 6),
           Text(
             "$totalCalories / $goal cal",
             style: const TextStyle(
-                color: Colors.orange,
-                fontSize: 18,
-                fontWeight: FontWeight.bold),
+              color: Colors.orange,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 12),
           LinearProgressIndicator(
@@ -218,7 +219,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _macro(String label, int amount) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white12,
         borderRadius: BorderRadius.circular(12),
@@ -250,7 +252,6 @@ class _HomeScreenState extends State<HomeScreen> {
           Text("${item.calories} cal",
               style: const TextStyle(color: Colors.orange)),
           const SizedBox(height: 8),
-
           Row(
             children: [
               _macro("P", item.protein),
@@ -260,7 +261,6 @@ class _HomeScreenState extends State<HomeScreen> {
               _macro("F", item.fats),
             ],
           ),
-
           const SizedBox(height: 12),
           Row(
             children: [
