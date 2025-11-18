@@ -13,7 +13,7 @@ class CalorieService {
     };
   }
 
-  // Create new log
+  // ADD MEAL
   static Future<Map<String, dynamic>> addLog({
     required String meal,
     required int calories,
@@ -23,7 +23,6 @@ class CalorieService {
     required String date,
   }) async {
     final url = Uri.parse("$baseUrl/calories");
-
     final body = {
       "meal": meal,
       "calories": calories,
@@ -39,41 +38,38 @@ class CalorieService {
     return jsonDecode(res.body);
   }
 
-  // Get logs by specific date
+  // GET BY DATE
   static Future<Map<String, dynamic>> getLogsByDate(String date) async {
     final url = Uri.parse("$baseUrl/calories/date/$date");
 
     final res = await http.get(url, headers: _headers());
     final data = jsonDecode(res.body);
 
-    // If backend returned an error
-    if (data is Map && data.containsKey("error")) {
-      return {"error": data["error"]};
-    }
+    // Ensure backend responded with a list
+    final list = (data is List) ? data : [];
 
-    // Ensure meals are mapped to model objects
-    final mealsJson = data["meals"] ?? [];
-
-    final meals = (mealsJson as List)
-        .map((e) => CalorieLog.fromJson(e))
-        .toList();
+    final meals = list.map((e) => CalorieLog.fromJson(e)).toList();
 
     return {
-      "meals": meals,
-      "totalCalories": data["totalCalories"] ?? 0,
-      "totalProtein": data["totalProtein"] ?? 0,
-      "totalCarbs": data["totalCarbs"] ?? 0,
-      "totalFats": data["totalFats"] ?? 0,
-    };
+        "meals": meals,
+          "totalCalories": list.fold<int>(
+              0, (sum, e) => (sum + ((e["calories"] ?? 0) as num)).toInt()),
+          "totalProtein": list.fold<int>(
+              0, (sum, e) => (sum + ((e["protein"] ?? 0) as num)).toInt()),
+          "totalCarbs": list.fold<int>(
+              0, (sum, e) => (sum + ((e["carbs"] ?? 0) as num)).toInt()),
+          "totalFats": list.fold<int>(
+              0, (sum, e) => (sum + ((e["fats"] ?? 0) as num)).toInt()),
+          };
   }
 
-  // Delete one log
+  // DELETE
   static Future<void> deleteLog(String id) async {
     final url = Uri.parse("$baseUrl/calories/$id");
     await http.delete(url, headers: _headers());
   }
 
-  // Update existing log
+  // UPDATE
   static Future<void> updateLog({
     required String id,
     required String meal,
@@ -97,7 +93,7 @@ class CalorieService {
     await http.patch(url, headers: _headers(), body: jsonEncode(body));
   }
 
-  // Get all logs (optional for list screen)
+  // GET ALL LOGS (optional)
   static Future<List<CalorieLog>> getLogs() async {
     final url = Uri.parse("$baseUrl/calories");
     final res = await http.get(url, headers: _headers());
