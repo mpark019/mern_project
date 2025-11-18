@@ -36,7 +36,7 @@ class _AddCalorieScreenState extends State<AddCalorieScreen> {
       proteinCtrl.text = args.protein.toString();
       carbsCtrl.text = args.carbs.toString();
       fatsCtrl.text = args.fats.toString();
-      dateCtrl.text = args.date;
+      dateCtrl.text = args.date; // could be YYYY-MM-DD or include time
     } else {
       final now = DateTime.now();
       dateCtrl.text =
@@ -99,16 +99,15 @@ class _AddCalorieScreenState extends State<AddCalorieScreen> {
             buildField(proteinCtrl, "Protein (g)", number: true),
             buildField(carbsCtrl, "Carbs (g)", number: true),
             buildField(fatsCtrl, "Fats (g)", number: true),
-
             TextField(
               controller: dateCtrl,
               decoration: const InputDecoration(
-                labelText: "Date (YYYY-MM-DD)",
+                labelText: "Date (YYYY-MM-DD or with time)",
                 floatingLabelBehavior: FloatingLabelBehavior.always,
-                contentPadding: EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+                contentPadding:
+                    EdgeInsets.symmetric(vertical: 18, horizontal: 12),
               ),
             ),
-
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: loading ? null : save,
@@ -120,9 +119,10 @@ class _AddCalorieScreenState extends State<AddCalorieScreen> {
                   ? const CircularProgressIndicator(color: Colors.white)
                   : Text(
                       editMode ? "Update Meal" : "Save Meal",
-                      style: const TextStyle(color: Colors.white, fontSize: 17),
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 17),
                     ),
-            )
+            ),
           ],
         ),
       ),

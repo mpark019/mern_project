@@ -13,7 +13,7 @@ class CalorieService {
     };
   }
 
-  // Add meal
+  // ADD LOG (with time)
   static Future<Map<String, dynamic>> addLog({
     required String meal,
     required int calories,
@@ -22,6 +22,15 @@ class CalorieService {
     required int fats,
     required String date,
   }) async {
+
+    // Convert YYYY-MM-DD → YYYY-MM-DD HH:mm:ss
+    String fixedDate = date;
+    if (date.length == 10) {
+      final now = DateTime.now();
+      final time = "${now.hour.toString().padLeft(2,'0')}:${now.minute.toString().padLeft(2,'0')}:${now.second.toString().padLeft(2,'0')}";
+      fixedDate = "$date $time";
+    }
+
     final url = Uri.parse("$baseUrl/calories");
 
     final body = {
@@ -30,7 +39,7 @@ class CalorieService {
       "protein": protein,
       "carbs": carbs,
       "fats": fats,
-      "date": date,
+      "date": fixedDate,
     };
 
     final res =
@@ -39,18 +48,17 @@ class CalorieService {
     return jsonDecode(res.body);
   }
 
-  // Get logs for a selected date
   static Future<Map<String, dynamic>> getLogsByDate(String date) async {
-    final url = Uri.parse("$baseUrl/calories/date/$date");
+    final cleaned = date.split(" ")[0];
+    final url = Uri.parse("$baseUrl/calories/date/$cleaned");
 
     final res = await http.get(url, headers: _headers());
-    if (res.statusCode != 200) return {"error": "Failed to load logs"};
+    if (res.statusCode != 200) return {"error": true};
 
     final decoded = jsonDecode(res.body);
 
-    final mealsJson = decoded["meals"] as List;
-    final meals = mealsJson
-        .map((e) => CalorieLog.fromJson(e as Map<String, dynamic>))
+    final meals = (decoded["meals"] as List)
+        .map((e) => CalorieLog.fromJson(e))
         .toList();
 
     return {
@@ -62,13 +70,11 @@ class CalorieService {
     };
   }
 
-  // Delete log
   static Future<void> deleteLog(String id) async {
     final url = Uri.parse("$baseUrl/calories/$id");
     await http.delete(url, headers: _headers());
   }
 
-  // Update log
   static Future<void> updateLog({
     required String id,
     required String meal,
@@ -79,6 +85,7 @@ class CalorieService {
     required String date,
   }) async {
     final url = Uri.parse("$baseUrl/calories/$id");
+    final fixedDate = date.split(" ")[0];
 
     final body = {
       "meal": meal,
@@ -86,19 +93,9 @@ class CalorieService {
       "protein": protein,
       "carbs": carbs,
       "fats": fats,
-      "date": date,
+      "date": fixedDate,
     };
 
     await http.patch(url, headers: _headers(), body: jsonEncode(body));
-  }
-
-  // Get all logs
-  static Future<List<CalorieLog>> getLogs() async {
-    final url = Uri.parse("$baseUrl/calories");
-    final res = await http.get(url, headers: _headers());
-    final data = jsonDecode(res.body);
-
-    final list = data["meals"] as List;
-    return list.map((e) => CalorieLog.fromJson(e)).toList();
   }
 }
