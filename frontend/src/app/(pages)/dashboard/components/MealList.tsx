@@ -1,4 +1,4 @@
-import { formatTime, getLocalDateString } from '../utils';
+import { getLocalDateString } from '../utils';
 import type { CalorieLog } from '../types';
 
 interface MealListProps {
@@ -76,9 +76,6 @@ export function MealList({
                     {formatDateDisplay(food.date)}
                   </span>
                 )}
-              </div>
-              <div className="text-[11px] uppercase tracking-[0.14em] text-gray-300 mt-0.5">
-                {food.createdAt ? formatTime(food.createdAt) : ''}
               </div>
               <div className="flex gap-2 mt-2">
                 <MacroTag label="P" value={food.protein} />
